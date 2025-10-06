@@ -1,0 +1,115 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36" version="28.2.5">
+  <diagram name="Page-1" id="46-Ij4QnFHWYGuMfkN0l">
+    <mxGraphModel dx="786" dy="451" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="-fiA0x3XEAqKGvVLDNLU-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="-fiA0x3XEAqKGvVLDNLU-2" target="-fiA0x3XEAqKGvVLDNLU-3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="-fiA0x3XEAqKGvVLDNLU-2" value="start" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.start_1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="220" y="30" width="190" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="-fiA0x3XEAqKGvVLDNLU-7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="-fiA0x3XEAqKGvVLDNLU-3" target="-fiA0x3XEAqKGvVLDNLU-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="-fiA0x3XEAqKGvVLDNLU-3" value="import file ที่ต้องการ train" style="shape=manualInput;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="235" y="130" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="-fiA0x3XEAqKGvVLDNLU-5" value="อ่าน column ว่ามีอะไรบ้าง" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="240" y="250" width="150" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="-fiA0x3XEAqKGvVLDNLU-6" value="list column ให้ user เลือก&lt;div&gt;-row(0 or 1)(choies)&lt;/div&gt;&lt;div&gt;-features(1 or many)&lt;/div&gt;&lt;div&gt;-label(1)&lt;/div&gt;" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.display;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="225" y="360" width="180" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="-fiA0x3XEAqKGvVLDNLU-8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="-fiA0x3XEAqKGvVLDNLU-5" target="-fiA0x3XEAqKGvVLDNLU-6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="-fiA0x3XEAqKGvVLDNLU-12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="-fiA0x3XEAqKGvVLDNLU-9" target="-fiA0x3XEAqKGvVLDNLU-11">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="-fiA0x3XEAqKGvVLDNLU-9" value="user เลือก category ให้แต่ละ column&amp;nbsp;" style="html=1;strokeWidth=2;shape=manualInput;whiteSpace=wrap;rounded=1;size=26;arcSize=11;" vertex="1" parent="1">
+          <mxGeometry x="232.5" y="480" width="165" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="-fiA0x3XEAqKGvVLDNLU-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="-fiA0x3XEAqKGvVLDNLU-6" target="-fiA0x3XEAqKGvVLDNLU-9">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="390" y="510" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="-fiA0x3XEAqKGvVLDNLU-19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="-fiA0x3XEAqKGvVLDNLU-11" target="-fiA0x3XEAqKGvVLDNLU-27">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="-fiA0x3XEAqKGvVLDNLU-11" value="ใส่เป็น array 1,2 มิติ" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="265" y="580" width="100" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="-fiA0x3XEAqKGvVLDNLU-13" value="random weight, bias" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="265" y="740" width="100" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="-fiA0x3XEAqKGvVLDNLU-24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="-fiA0x3XEAqKGvVLDNLU-14" target="-fiA0x3XEAqKGvVLDNLU-15">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="-fiA0x3XEAqKGvVLDNLU-14" value="forward propagation" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="425" y="850" width="100" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="-fiA0x3XEAqKGvVLDNLU-25" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="-fiA0x3XEAqKGvVLDNLU-15" target="-fiA0x3XEAqKGvVLDNLU-17">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="-fiA0x3XEAqKGvVLDNLU-15" value="back propagation" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="570" y="850" width="100" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="-fiA0x3XEAqKGvVLDNLU-23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="-fiA0x3XEAqKGvVLDNLU-16" target="-fiA0x3XEAqKGvVLDNLU-14">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="-fiA0x3XEAqKGvVLDNLU-29" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="-fiA0x3XEAqKGvVLDNLU-16" target="-fiA0x3XEAqKGvVLDNLU-30">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="315" y="1000" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="-fiA0x3XEAqKGvVLDNLU-16" value="loop จำนวนการ train" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.decision;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="240" y="860" width="150" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="-fiA0x3XEAqKGvVLDNLU-17" value="ปรับ weight bias" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="700" y="850" width="100" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="-fiA0x3XEAqKGvVLDNLU-22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="-fiA0x3XEAqKGvVLDNLU-18" target="-fiA0x3XEAqKGvVLDNLU-16">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="-fiA0x3XEAqKGvVLDNLU-18" value="" style="verticalLabelPosition=bottom;verticalAlign=top;html=1;shape=mxgraph.flowchart.on-page_reference;" vertex="1" parent="1">
+          <mxGeometry x="305" y="820" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="-fiA0x3XEAqKGvVLDNLU-21" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="-fiA0x3XEAqKGvVLDNLU-13" target="-fiA0x3XEAqKGvVLDNLU-18">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="-fiA0x3XEAqKGvVLDNLU-26" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="-fiA0x3XEAqKGvVLDNLU-17" target="-fiA0x3XEAqKGvVLDNLU-18">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="750" y="790" />
+              <mxPoint x="513" y="790" />
+              <mxPoint x="513" y="830" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="-fiA0x3XEAqKGvVLDNLU-28" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="-fiA0x3XEAqKGvVLDNLU-27" target="-fiA0x3XEAqKGvVLDNLU-13">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="560" y="670" />
+              <mxPoint x="315" y="670" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="-fiA0x3XEAqKGvVLDNLU-27" value="train test split" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="510" y="580" width="100" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="-fiA0x3XEAqKGvVLDNLU-32" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="-fiA0x3XEAqKGvVLDNLU-30" target="-fiA0x3XEAqKGvVLDNLU-31">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="-fiA0x3XEAqKGvVLDNLU-30" value="forward propagation กับ test data" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="265" y="990" width="100" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="-fiA0x3XEAqKGvVLDNLU-31" value="อัตราส่วนที่เดาถูก" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.display;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="440" y="990" width="130" height="60" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
