@@ -1,10 +1,16 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36" version="28.2.5">
   <diagram name="Page-1" id="46-Ij4QnFHWYGuMfkN0l">
-    <mxGraphModel dx="1048" dy="556" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="1377" dy="758" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="zS4vRgx7BgI403RyQG97-3" value="" style="rounded=0;whiteSpace=wrap;html=1;fillStyle=auto;fillColor=none;" vertex="1" parent="1">
+        <mxCell id="zS4vRgx7BgI403RyQG97-1" value="" style="rounded=0;whiteSpace=wrap;html=1;fillStyle=auto;fillColor=none;" parent="1" vertex="1">
+          <mxGeometry x="420.37" y="840" width="389.63" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="L2sYbwDYnSNKT0p-xYX5-1" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="190" y="120" width="500" height="220" as="geometry" />
+        </mxCell>
+        <mxCell id="zS4vRgx7BgI403RyQG97-3" value="" style="rounded=0;whiteSpace=wrap;html=1;fillStyle=auto;fillColor=none;strokeColor=#FF3333;" parent="1" vertex="1">
           <mxGeometry x="220" y="760" width="610" height="210" as="geometry" />
         </mxCell>
         <mxCell id="-fiA0x3XEAqKGvVLDNLU-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="-fiA0x3XEAqKGvVLDNLU-2" target="-fiA0x3XEAqKGvVLDNLU-3" edge="1">
@@ -16,7 +22,7 @@
         <mxCell id="-fiA0x3XEAqKGvVLDNLU-7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="-fiA0x3XEAqKGvVLDNLU-3" target="-fiA0x3XEAqKGvVLDNLU-5" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="-fiA0x3XEAqKGvVLDNLU-3" value="import file ที่ต้องการ train" style="shape=manualInput;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+        <mxCell id="-fiA0x3XEAqKGvVLDNLU-3" value="import file ที่ต้องการ train&lt;div&gt;ให้ user copy part&lt;/div&gt;" style="shape=manualInput;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="235" y="130" width="160" height="80" as="geometry" />
         </mxCell>
         <mxCell id="-fiA0x3XEAqKGvVLDNLU-5" value="อ่าน column ว่ามีอะไรบ้าง" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;" parent="1" vertex="1">
@@ -40,7 +46,11 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="-fiA0x3XEAqKGvVLDNLU-19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="-fiA0x3XEAqKGvVLDNLU-11" target="-fiA0x3XEAqKGvVLDNLU-27" edge="1">
-          <mxGeometry relative="1" as="geometry" />
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="540" y="615" />
+            </Array>
+          </mxGeometry>
         </mxCell>
         <mxCell id="-fiA0x3XEAqKGvVLDNLU-11" value="ใส่เป็น array 1,2 มิติ" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;" parent="1" vertex="1">
           <mxGeometry x="265" y="580" width="100" height="70" as="geometry" />
@@ -68,7 +78,7 @@
             <mxPoint x="315" y="1000" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="-fiA0x3XEAqKGvVLDNLU-16" value="loop กับ train data" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.decision;whiteSpace=wrap;" parent="1" vertex="1">
+        <mxCell id="-fiA0x3XEAqKGvVLDNLU-16" value="i = 1 ; i &amp;lt; n ; i ++" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.decision;whiteSpace=wrap;" parent="1" vertex="1">
           <mxGeometry x="240" y="860" width="150" height="100" as="geometry" />
         </mxCell>
         <mxCell id="-fiA0x3XEAqKGvVLDNLU-17" value="ปรับ weight bias" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;" parent="1" vertex="1">
@@ -138,17 +148,32 @@
         <mxCell id="RW19oWGCIhu28mRPmWR4-46" value="loop ใน ทุก ๆ row" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.decision;whiteSpace=wrap;" parent="1" vertex="1">
           <mxGeometry x="60" y="1760" width="200" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="zS4vRgx7BgI403RyQG97-1" value="" style="rounded=0;whiteSpace=wrap;html=1;fillStyle=auto;fillColor=none;" vertex="1" parent="1">
-          <mxGeometry x="420.37" y="840" width="389.63" height="90" as="geometry" />
-        </mxCell>
-        <mxCell id="zS4vRgx7BgI403RyQG97-2" value="อาจจะทำพร้อม ๆ กัน?" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+        <mxCell id="zS4vRgx7BgI403RyQG97-2" value="อาจจะทำพร้อม ๆ กัน?" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
           <mxGeometry x="410.37" y="815" width="130" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="zS4vRgx7BgI403RyQG97-4" value="main program" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+        <mxCell id="zS4vRgx7BgI403RyQG97-4" value="main program" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
           <mxGeometry x="210" y="760" width="100" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="zS4vRgx7BgI403RyQG97-5" value="https://www.youtube.com/watch?v=X1Fq59EQaXo" style="html=1;shadow=0;dashed=0;shape=mxgraph.bootstrap.rrect;rSize=5;strokeColor=none;strokeWidth=1;fillColor=none;fontColor=#0085FC;whiteSpace=wrap;align=center;verticalAlign=middle;spacingLeft=0;fontStyle=0;fontSize=16;spacing=5;" vertex="1" parent="1">
-          <mxGeometry x="510" y="150" width="60" height="40" as="geometry" />
+        <mxCell id="zS4vRgx7BgI403RyQG97-5" value="https://www.youtube.com/watch?v=X1Fq59EQaXo" style="html=1;shadow=0;dashed=0;shape=mxgraph.bootstrap.rrect;rSize=5;strokeColor=none;strokeWidth=1;fillColor=none;fontColor=#0085FC;whiteSpace=wrap;align=center;verticalAlign=middle;spacingLeft=0;fontStyle=0;fontSize=16;spacing=5;" parent="1" vertex="1">
+          <mxGeometry x="420" y="210" width="240" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="L2sYbwDYnSNKT0p-xYX5-3" value="Loss function" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="310" y="1370" width="115" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="L2sYbwDYnSNKT0p-xYX5-4" value="RELU" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="447.5" y="1370" width="115" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="L2sYbwDYnSNKT0p-xYX5-7" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=light-dark(#ff0000, #ededed);" vertex="1" parent="1">
+          <mxGeometry x="180" y="110" width="520" height="460" as="geometry" />
+        </mxCell>
+        <mxCell id="L2sYbwDYnSNKT0p-xYX5-8" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#FF3333;" vertex="1" parent="1">
+          <mxGeometry x="180" y="575" width="520" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="L2sYbwDYnSNKT0p-xYX5-9" value="" style="rounded=0;whiteSpace=wrap;html=1;fillStyle=auto;fillColor=none;strokeColor=#FF3333;" vertex="1" parent="1">
+          <mxGeometry x="220" y="975" width="520" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="L2sYbwDYnSNKT0p-xYX5-11" value="+plot graph loss" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="590" y="1005" width="110" height="30" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
