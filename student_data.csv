@@ -1,0 +1,11 @@
+Student_ID,Name,Age,Gender,Score_Math,Score_English,Score_Science,Average_Score,Grade
+S001,Anan,15,M,78,82,80,80.0,B
+S002,Boon,16,M,85,79,88,84.0,B
+S003,Chai,15,M,90,91,85,88.67,B
+S004,Duang,17,F,65,70,72,69.0,D
+S005,Ek,16,M,88,76,90,84.67,B
+S006,Fon,15,F,92,89,94,91.67,A
+S007,Gift,16,F,74,85,78,79.0,C
+S008,Hut,17,M,81,80,83,81.33,B
+S009,Ice,15,F,95,93,96,94.67,A
+S010,Jane,16,F,87,84,86,85.67,B
