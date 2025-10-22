@@ -3,10 +3,11 @@
 #include <string.h>
 #include <ctype.h> // For isspace
 
-#define MAX_COLS 10           // Maximum number of columns expected
-#define MAX_COL_NAME_LEN 30   // Maximum length of a column name
-#define SELECTION_SIZE 10     // Maximum number of features that can be selected
-#define MAX_ROW_LENGTH 250    // Maximum expected length of a single row
+#define MAX_COLS 100           // Maximum number of columns expected
+#define MAX_COL_NAME_LEN 300   // Maximum length of a column name
+#define SELECTION_SIZE 100     // Maximum number of features that can be selected
+#define MAX_ROW_LENGTH 250000  // Maximum expected length of a single row
+#define FILE_NAME_LEN 100      // Maximum expected length file name
 
 typedef struct {
     float feature_values[SELECTION_SIZE]; // Values of the selected features
@@ -14,7 +15,7 @@ typedef struct {
 } DataRow;
 
 // Global variable for file name
-char file_name[100];
+char file_name[FILE_NAME_LEN];
 
 // Global variables to store column names
 char all_column_names[MAX_COLS][MAX_COL_NAME_LEN];
@@ -311,12 +312,13 @@ int main(void) {
                 if (already_selected) {
                     printf("Feature %s is already selected.\n", all_column_names[selection - 1]);
                 } else {
+                    
+                    clear_console();
                     // Check if selection is the same as the current label
                     if (strcmp(all_column_names[selection - 1], selected_label) == 0) {
                         printf("Error: %s is already selected as the Label. Please select a different column.\n", all_column_names[selection - 1]);
                         continue;
                     }
-                    
                     strncpy(selected_features[feature_n], all_column_names[selection - 1], MAX_COL_NAME_LEN - 1);
                     selected_features[feature_n][MAX_COL_NAME_LEN - 1] = '\0';
                     feature_n++;
@@ -332,13 +334,14 @@ int main(void) {
 
 
     // --- Label Selection ---
-
-    printf("\n===================================================================\n");
+    clear_console();
+    printf("\n========================================\n");
     printf("Select the target variable (Label).\n");
-    printf("===================================================================\n");
+    printf("==========================================\n");
 
     int label_selection = -1;
     while (1) {
+        
         display_features();
         printf("\nSelect label # (1-%d): ", num_columns);
 
@@ -376,7 +379,7 @@ int main(void) {
     
 
     // --- Read Actual Data ---
-
+    clear_console();
     printf("\n==============================================\n");
     printf("Reading actual data for selected columns...\n");
     printf("==============================================\n");
@@ -415,7 +418,6 @@ int main(void) {
          printf("No data rows to display.\n");
     }
 
-
     // --- Cleanup ---
 
     if (all_data != NULL) {
@@ -427,8 +429,3 @@ int main(void) {
 }
 
 // ------------------------------------------- END part 1 ------------------------------------------- //
-
-
-
-
-
