@@ -1,22 +1,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h> // For isspace
 
-#define MAX_COLS 10           
-#define MAX_COL_NAME_LEN 30   
-#define SELECTION_SIZE 10     
-#define MAX_ROW_LENGTH 250   
-#define MAX_VAL_LEN 50       
-    
-// Data Structure to store actual values
+#define MAX_COLS 10           // Maximum number of columns expected
+#define MAX_COL_NAME_LEN 30   // Maximum length of a column name
+#define SELECTION_SIZE 10     // Maximum number of features that can be selected
+#define MAX_ROW_LENGTH 250    // Maximum expected length of a single row
+
 typedef struct {
-    char feature_values[SELECTION_SIZE][MAX_VAL_LEN]; // Values of the selected features
-    char label_value[MAX_VAL_LEN];                    // Value of the selected label
+    float feature_values[SELECTION_SIZE]; // Values of the selected features
+    float label_value;                    // Value of the selected label
 } DataRow;
 
-
 // Global variable for file name
-char file_name[100]; 
+char file_name[100];
 
 // Global variables to store column names
 char all_column_names[MAX_COLS][MAX_COL_NAME_LEN];
@@ -28,37 +26,57 @@ char selected_label[MAX_COL_NAME_LEN];
 int feature_n = 0; // Counter for the number of selected features
 
 // New global variables for data storage and indices
-int row_num = 0;           // Total number of data rows
+int row_num = 0;      // Total number of data rows
 DataRow *all_data = NULL;  // Pointer to hold the array of DataRow (Actual data)
 int selected_feature_indices[SELECTION_SIZE]; // 0-based index of selected features
-int selected_label_index = -1;                // 0-based index of the selected label
+int selected_label_index = -1;                 // 0-based index of the selected label
 
 
-/**
- * @brief Splits the first row (header) of the CSV file into individual column names.
- * @param first_row The string containing the first row of the CSV.
- */
+// ---------------------- UTILITY FUNCTIONS ----------------------
+
+// Function to clear the console in a cross-platform way (basic approach)
+void clear_console() {
+#ifdef _WIN32
+    system("cls");
+#else
+    // ANSI escape code for clearing console
+    printf("\033[2J\033[1;1H");
+#endif
+}
+
+// Function to trim leading/trailing whitespace and newlines (optional but good practice)
+char *trim_whitespace(char *str) {
+    char *end;
+    while(isspace((unsigned char)*str)) str++;
+    if(*str == 0) return str;
+    end = str + strlen(str) - 1;
+    while(end > str && isspace((unsigned char)*end)) end--;
+    end[1] = '\0';
+    return str;
+}
+
+// ---------------------- FUNCTION DEFINITIONS ----------------------
+
 void split_first_row(const char *first_row) {
     char temp_row[MAX_ROW_LENGTH];
-    // Copy the row to a temporary variable for modification (strtok)
     strncpy(temp_row, first_row, sizeof(temp_row) - 1);
     temp_row[sizeof(temp_row) - 1] = '\0';
     
-    // Remove trailing newline or carriage return characters
+    // Replace newline/carriage return with null terminator
     temp_row[strcspn(temp_row, "\r\n")] = '\0';
 
     char *token = strtok(temp_row, ",");
     num_columns = 0;
     while (token != NULL && num_columns < MAX_COLS) {
-        // Check and remove surrounding quotes if present (e.g., "Student_ID (1)")
-        size_t len = strlen(token);
-        if (len > 0 && token[0] == '"' && token[len - 1] == '"') {
-            // Copy content without quotes
-            strncpy(all_column_names[num_columns], token + 1, len - 2);
+        char *trimmed_token = trim_whitespace(token); // Trim token
+        size_t len = strlen(trimmed_token);
+
+        // Handle quoted strings (e.g., "column name")
+        if (len > 0 && trimmed_token[0] == '"' && trimmed_token[len - 1] == '"') {
+            strncpy(all_column_names[num_columns], trimmed_token + 1, len - 2);
             all_column_names[num_columns][len - 2] = '\0';
         } else {
-            // Copy content as is
-            strncpy(all_column_names[num_columns], token, len);
+            strncpy(all_column_names[num_columns], trimmed_token, len);
             all_column_names[num_columns][len] = '\0';
         }
         num_columns++;
@@ -66,41 +84,31 @@ void split_first_row(const char *first_row) {
     }
 }
 
-/**
- * @brief Displays the available features for selection, including their index.
- */
 void display_features() {
     printf("\nAvailable Columns:\n");
     for (int i = 0; i < num_columns; i++) {
-        printf("%s (%d) ", all_column_names[i], i + 1); // Display column name and its 1-based index
+        printf("%s (%d) ", all_column_names[i], i + 1);
     }
     printf("\n");
 }
 
-/**
- * @brief Counts the total number of rows in the CSV file, excluding the header.
- * @param filename The name of the CSV file.
- * @return The number of data rows.
- */
 int count_rows_in_csv(const char *filename) {
     FILE *file = fopen(filename, "r");
-    if (file == NULL) {
-        return 0; // Return 0 if file cannot be opened
-    }
+    if (file == NULL) return 0;
 
     int count = 0;
     char line[MAX_ROW_LENGTH];
     
-    // Read and discard the header row
+    // Skip header
     if (fgets(line, sizeof(line), file) == NULL) {
         fclose(file);
-        return 0; // File is empty or only has header
+        return 0;
     }
 
-    // Count the rest of the rows (data rows)
+    // Count non-empty data rows
     while (fgets(line, sizeof(line), file) != NULL) {
-        // Check if the line is not just a newline/empty line
         if (strspn(line, " \t\n\r") != strlen(line)) {
+            // Basic check to skip completely empty lines
             count++;
         }
     }
@@ -109,11 +117,6 @@ int count_rows_in_csv(const char *filename) {
     return count;
 }
 
-/**
- * @brief Finds the 0-based index of a column name.
- * @param col_name The name of the column to find.
- * @return The 0-based index of the column, or -1 if not found.
- */
 int get_column_index(const char *col_name) {
     for (int i = 0; i < num_columns; i++) {
         if (strcmp(all_column_names[i], col_name) == 0) {
@@ -123,88 +126,110 @@ int get_column_index(const char *col_name) {
     return -1;
 }
 
-/**
- * @brief Reads the actual data values from the CSV file for the selected features and label.
- * @return 0 on success, 1 on failure.
- */
+
 int read_selected_data() {
-    // 1. Get 0-based indices for all selected columns
     for (int i = 0; i < feature_n; i++) {
         selected_feature_indices[i] = get_column_index(selected_features[i]);
+        if (selected_feature_indices[i] == -1) {
+             printf("Error: Feature '%s' index not found!\n", selected_features[i]);
+             return 1;
+        }
     }
     selected_label_index = get_column_index(selected_label);
-
-    // 2. Allocate memory for the data array
-    all_data = (DataRow *)malloc(row_num * sizeof(DataRow));
-    if (all_data == NULL) {
-        printf("Error: Memory allocation failed for data storage!\n");
+    if (selected_label_index == -1) {
+        printf("Error: Label '%s' index not found!\n", selected_label);
         return 1;
     }
 
-    // 3. Re-open the file and read data
+    // Free previous allocation if exists
+    if (all_data != NULL) {
+        free(all_data);
+        all_data = NULL;
+    }
+    
+    // Allocate memory for data
+    all_data = (DataRow *)malloc(row_num * sizeof(DataRow));
+    if (all_data == NULL) {
+        printf("Error: Memory allocation failed!\n");
+        return 1;
+    }
+
     FILE *file = fopen(file_name, "r");
     if (file == NULL) {
-        printf("Error: Could not re-open file %s.\n", file_name);
-        free(all_data); // Clean up allocated memory
+        printf("Error: Could not open file %s.\n", file_name);
+        free(all_data);
         all_data = NULL;
         return 1;
     }
 
     char line[MAX_ROW_LENGTH];
-    fgets(line, sizeof(line), file); // Skip the header row
+    fgets(line, sizeof(line), file); // Skip header
 
     for (int row = 0; row < row_num && fgets(line, sizeof(line), file) != NULL; row++) {
-        // Create a copy of the line because strtok modifies the string
-        char *temp_line = strdup(line); 
+
+        char temp_line_buffer[MAX_ROW_LENGTH]; 
+        strncpy(temp_line_buffer, line, sizeof(temp_line_buffer) - 1);
+        temp_line_buffer[sizeof(temp_line_buffer) - 1] = '\0';
+        temp_line_buffer[strcspn(temp_line_buffer, "\r\n")] = '\0'; // Remove newline
+
         char *token;
         int col_index = 0;
         int feature_count = 0;
         
-        // Remove trailing newline or carriage return characters from the end of the line
-        temp_line[strcspn(temp_line, "\r\n")] = '\0';
+        token = strtok(temp_line_buffer, ","); 
         
-        // Start tokenizing the line
-        token = strtok(temp_line, ",");
         while (token != NULL && col_index < num_columns) {
+            // Trim whitespace from token
+            char *trimmed_token = trim_whitespace(token);
 
-            // Check if current column (col_index) matches any selected feature index
+            // Features
             for (int i = 0; i < feature_n; i++) {
                 if (col_index == selected_feature_indices[i]) {
-                    // Store the feature value
-                    strncpy(all_data[row].feature_values[feature_count], token, MAX_VAL_LEN - 1);
-                    all_data[row].feature_values[feature_count][MAX_VAL_LEN - 1] = '\0';
+                    all_data[row].feature_values[feature_count] = atof(trimmed_token);
                     feature_count++;
                     break; 
                 }
             }
 
-            // Check if current column (col_index) matches the selected label index
+            // Label
             if (col_index == selected_label_index) {
-                // Store the label value
-                strncpy(all_data[row].label_value, token, MAX_VAL_LEN - 1);
-                all_data[row].label_value[MAX_VAL_LEN - 1] = '\0';
+                all_data[row].label_value = atof(trimmed_token);
             }
 
             col_index++;
-            token = strtok(NULL, ",");
+            token = strtok(NULL, ","); 
         }
-        free(temp_line); // Free the memory allocated by strdup
+        
+
+        if (feature_count != feature_n) {
+             printf("Warning: Row %d has missing data for selected features.\n", row + 1);
+        }
     }
 
     fclose(file);
-    return 0; // Success
+    return 0;
 }
 
 
-int main(void) {
-    system("cls"); // Clear console
+// ---------------------- MAIN FUNCTION ----------------------
 
-    // --- Part 1: File Input and Validation ---
+int main(void) {
+    clear_console(); 
+
     while (1) {
         printf("Input your file name (Must be .csv file): ");
-        fgets(file_name, sizeof(file_name), stdin);
+        if (fgets(file_name, sizeof(file_name), stdin) == NULL) {
+            printf("\nInput error or EOF. Exiting.\n");
+            return 1;
+        }
         file_name[strcspn(file_name, "\n")] = '\0'; 
-        system("cls"); 
+        clear_console(); 
+
+        // Trim any trailing carriage return leftover from fgets
+        size_t len = strlen(file_name);
+        if (len > 0 && file_name[len-1] == '\r') {
+             file_name[len-1] = '\0';
+        }
 
         if (strstr(file_name, ".csv") == NULL) {
             printf("==============================================\n");
@@ -226,18 +251,27 @@ int main(void) {
             }
             fclose(import_file); 
 
-            row_num = count_rows_in_csv(file_name);
+            if (num_columns == 0) {
+                 printf("==============================================\n");
+                 printf("Error: Could not parse columns from header row.\n");
+                 printf("==============================================\n");
+                 continue;
+            }
 
-            system("cls"); 
+            row_num = count_rows_in_csv(file_name);
+            clear_console(); 
             printf("==============================================\n");
             printf("File \"%s\" opened successfully!\n", file_name);
             printf("Total data rows (excluding header): %d\n", row_num); 
+            printf("Available columns: %d\n", num_columns);
             printf("==============================================\n\n");
             break; 
         }
     }
     
-    // --- Part 2: Feature Selection ---
+
+    // --- Feature Selection ---
+
     int selection = -1;
     printf("\n===================================================================\n");
     printf("Select features for input (Feature). Input 0 to stop selecting features.\n");
@@ -245,8 +279,7 @@ int main(void) {
 
     while (1) {
         display_features(); 
-
-        printf("\nSelected Features (%d): ", feature_n);
+        printf("\nSelected Features (%d/%d): ", feature_n, SELECTION_SIZE);
         for(int i = 0; i < feature_n; i++) {
             printf("%s ", selected_features[i]);
         }
@@ -267,7 +300,6 @@ int main(void) {
             break; 
         } else if (selection >= 1 && selection <= num_columns) {
             if (feature_n < SELECTION_SIZE) {
-                // Check if the feature is already selected
                 int already_selected = 0;
                 for(int i = 0; i < feature_n; i++) {
                     if (strcmp(selected_features[i], all_column_names[selection - 1]) == 0) {
@@ -277,8 +309,14 @@ int main(void) {
                 }
 
                 if (already_selected) {
-                    printf("Feature %s is already selected. Please choose another.\n", all_column_names[selection - 1]);
+                    printf("Feature %s is already selected.\n", all_column_names[selection - 1]);
                 } else {
+                    // Check if selection is the same as the current label
+                    if (strcmp(all_column_names[selection - 1], selected_label) == 0) {
+                        printf("Error: %s is already selected as the Label. Please select a different column.\n", all_column_names[selection - 1]);
+                        continue;
+                    }
+                    
                     strncpy(selected_features[feature_n], all_column_names[selection - 1], MAX_COL_NAME_LEN - 1);
                     selected_features[feature_n][MAX_COL_NAME_LEN - 1] = '\0';
                     feature_n++;
@@ -288,11 +326,13 @@ int main(void) {
                 printf("Maximum number of features (%d) reached.\n", SELECTION_SIZE);
             }
         } else {
-            printf("Invalid selection. Please choose a number between 1 and %d, or 0 to stop.\n", num_columns);
+            printf("Invalid selection.\n");
         }
     }
 
-    // --- Part 3: Label Selection ---
+
+    // --- Label Selection ---
+
     printf("\n===================================================================\n");
     printf("Select the target variable (Label).\n");
     printf("===================================================================\n");
@@ -311,70 +351,75 @@ int main(void) {
 
         if (label_selection >= 1 && label_selection <= num_columns) {
             int is_feature = 0;
+            const char *potential_label = all_column_names[label_selection - 1];
+            
+            // Check if the selected column is already one of the features
             for (int i = 0; i < feature_n; i++) {
-                if (strcmp(selected_features[i], all_column_names[label_selection - 1]) == 0) {
+                if (strcmp(selected_features[i], potential_label) == 0) {
                     is_feature = 1;
                     break;
                 }
             }
             
             if (is_feature) {
-                printf("Error: The label cannot be one of the selected features. Please choose again.\n");
+                printf("Error: The label **cannot** be one of the selected features (%s).\n", potential_label);
             } else {
-                strncpy(selected_label, all_column_names[label_selection - 1], MAX_COL_NAME_LEN - 1);
+                strncpy(selected_label, potential_label, MAX_COL_NAME_LEN - 1);
                 selected_label[MAX_COL_NAME_LEN - 1] = '\0';
                 printf("Selected label: %s\n", selected_label);
                 break; 
             }
         } else {
-            printf("Invalid selection. Please choose a number between 1 and %d.\n", num_columns);
+            printf("Invalid selection.\n");
         }
     }
     
-    // --- Part 4: Read Actual Data ---
+
+    // --- Read Actual Data ---
+
     printf("\n==============================================\n");
     printf("Reading actual data for selected columns...\n");
     printf("==============================================\n");
 
     if (read_selected_data() != 0) {
         printf("Data reading failed. Exiting.\n");
+        if (all_data != NULL) free(all_data);
         return 1;
     }
     printf("Data successfully loaded into memory.\n");
-    
-    // --- Part 5: Display Results ---
+
+    // --- Display Results ---
+
     printf("\n==============================================\n");
     printf("Summary of Selections (Names and Values):\n");
     printf("==============================================\n");
+    printf("Features Selected: %d\n", feature_n); 
+    printf("Label: %s\n", selected_label); 
+    printf("Total Data Rows: %d\n", row_num); 
     
-    printf("feature_n = %d\n", feature_n); 
-    printf("label[] = { %s }\n", selected_label); 
-    printf("row_num = %d\n", row_num); 
-    
-    // Display actual data values for the first few rows
     printf("\nDisplaying first 3 rows of data (for verification):\n");
     int display_rows = (row_num > 3) ? 3 : row_num;
     
-    for (int r = 0; r < display_rows; r++) {
-        printf("Row %d:\n", r + 1);
-        
-        // Display features
-        printf("  Features: {");
-        for (int i = 0; i < feature_n; i++) {
-            printf("%s: \"%s\"", selected_features[i], all_data[r].feature_values[i]);
-            if (i < feature_n - 1) {
-                printf(", ");
+    if (row_num > 0) {
+        for (int r = 0; r < display_rows; r++) {
+            printf("Row %d:\n", r + 1);
+            printf("  Features: {");
+            for (int i = 0; i < feature_n; i++) {
+                printf("%s: %.3f", selected_features[i], all_data[r].feature_values[i]);
+                if (i < feature_n - 1) printf(", ");
             }
+            printf("}\n");
+            printf("  Label:    {%s: %.3f}\n", selected_label, all_data[r].label_value);
         }
-        printf("}\n");
-
-        // Display label
-        printf("  Label:    {%s: \"%s\"}\n", selected_label, all_data[r].label_value);
+    } else {
+         printf("No data rows to display.\n");
     }
 
-    // --- Part 6: Cleanup ---
+
+    // --- Cleanup ---
+
     if (all_data != NULL) {
-        free(all_data); // Crucial: Release the dynamically allocated memory
+        free(all_data);
         all_data = NULL;
     }
     
