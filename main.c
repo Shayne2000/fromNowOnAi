@@ -51,27 +51,37 @@ float weights[1][1] = {{1}}; //from random
 float bias[1][1] = {{1}}; //from random
 
 int sum ; //declare here is fine
+float weight_adjust_record[1][1][1] = {{{0}}}; //fix dimention
+float bias_adjust_record[1][1][1] = {{{0}}}; //fix dimention
 
 
 for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_count ++) {
 
     for (int row = 0 ; row < row_num ; row ++ ) {
 
-        for (int function_num = 0 ; function_num < layers ; function_num ++ ) {
+        for (int layer_num = 0 ; layer_num < layers ; layer_num ++ ) {
 
             sum = 0;
 
-            for (int node_num = 0 ; node_num < dimention[function_num] ; node_num++){
+            for (int node_num = 0 ; node_num < dimention[layer_num] ; node_num++){
 
-                sum += features_train[row][node_num] * weights[function_num][node_num];
+                sum += features_train[row][node_num] * weights[layer_num][node_num];
                 
             }
 
-            functions_pointer[function_num](sum+bias);
+            functions_pointer[layer_num](sum+bias[node_num]);
 
         }
 
+        loss(sum,row);
+
+        weight_adjust_record[][][] += (dLoss/dweight)/row_num ;
+        bias_adjust_record[][][] += (dloss/dbias)/row_num ;
+
     }
+
+    weights[][][] += weight_adjust_record[][][];
+    bias[][][] += bias_adjust_record[][][];
 
 }
 
