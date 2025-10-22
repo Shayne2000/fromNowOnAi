@@ -8,7 +8,7 @@
 #define MAX_ROW_LENGTH 250   
 #define MAX_VAL_LEN 50       
     
-// โครงสร้างสำหรับเก็บข้อมูลของแต่ละแถว (Data Structure to store actual values)
+// Data Structure to store actual values
 typedef struct {
     char feature_values[SELECTION_SIZE][MAX_VAL_LEN]; // Values of the selected features
     char label_value[MAX_VAL_LEN];                    // Value of the selected label
@@ -331,7 +331,7 @@ int main(void) {
         }
     }
     
-    // --- Part 4: Read Actual Data (New/Modified Part) ---
+    // --- Part 4: Read Actual Data ---
     printf("\n==============================================\n");
     printf("Reading actual data for selected columns...\n");
     printf("==============================================\n");
