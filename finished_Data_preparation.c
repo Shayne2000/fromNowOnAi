@@ -281,7 +281,7 @@ int main(void) {
     while (1) {
         display_features(); 
         printf("\nSelected Features (%d/%d): ", feature_n, SELECTION_SIZE);
-        for(int i = 0; i < feature_n; i++) {
+        for(int i = 0; i < feature_n; i++) {    
             printf("%s ", selected_features[i]);
         }
         printf("\nSelect feature # (1-%d, 0 to stop): ", num_columns);
@@ -291,7 +291,6 @@ int main(void) {
             while (getchar() != '\n'); 
             continue;
         }
-        while (getchar() != '\n'); 
 
         if (selection == 0) {
             if (feature_n == 0) {
