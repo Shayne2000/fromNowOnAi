@@ -1,0 +1,66 @@
+#include <stdio.h>
+#include <math.h>
+
+// 1. Sigmoid
+float sigmoid(float x) {
+    return 1.0 / (1.0 + exp(-x));
+}
+
+// 2. ReLU
+float relu(float x) {
+    if (x > 0)
+        return x;
+    else
+        return 0;
+}
+
+// 3. Leaky ReLU
+float leaky_relu(float x) {
+    if (x > 0)
+        return x;
+    else
+        return 0.01 * x;
+}
+
+// 4. Tanh
+float my_tanh(float x) {
+    float e_pos = exp(x);
+    float e_neg = exp(-x);
+    return (e_pos - e_neg) / (e_pos + e_neg);
+}
+
+// 5. Softsign
+float softsign(float x) {
+    return x / (1 + fabs(x));
+}
+
+// 6. ELU
+float elu(float x, float alpha) {
+    if (x >= 0)
+        return x;
+    else
+        return alpha * (exp(x) - 1);
+}
+
+// 7. Swish
+float swish(float x) {
+    return x * sigmoid(x);
+}
+
+// 8. Softplus
+float softplus(float x) {
+    return log(1 + exp(x));
+}
+
+// 9. Binary Step
+float binary_step(float x) {
+    if (x >= 0)
+        return 1.0;
+    else
+        return 0.0;
+}
+
+// 10. Linear
+float linear(float x) {
+    return x;
+}
