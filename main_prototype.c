@@ -1,0 +1,180 @@
+// Online C compiler to run C program online
+#include <stdio.h>
+
+float weight[4][4] = {{1.1,1.2,1.3,1.4},{2.1,2.2,2.3,2.4},
+    {3.1,3.2,3.3,3.4},{4.1,4.2,4.3,4.4}};
+float keep[5][4];
+float bias[4][2] = {{10.1,10.2},{11.1,11.2},{12.1,12.2},{13.1,13.2}};
+
+
+
+float f(float x) {
+
+    return x;
+}
+
+float df(float x) {
+    return 1 ;
+}
+
+float dzdw_function (int layer , int lastnode , int nextnode) {
+    return keep[layer][lastnode*2+nextnode];
+}
+
+float dzdz_function (int layer , int lastnode , int nextnode) {
+    return weight[layer][lastnode*2+nextnode];
+}
+
+
+float loss (float y_predict) { //https://blog.dailydoseofds.com/p/10-most-common-and-must-know-loss
+    float y = 1000;
+    return y - y_predict;
+}
+
+float dldw (int,int, int);
+
+float dldz (int layer, int lastnode , int nextnode) {
+    return weight[layer][lastnode*2+nextnode] ; //w
+}
+
+
+int main() {
+    float (*function_pointer[3])(float),value;
+    float (*diff[5])(float);
+    float input[2] = {1,2};
+
+    //float z[4][2];
+
+
+    float pre1[2],pre2[2];
+
+    //printf("%f\n",1*1.1);
+
+    for (int i = 0 ; i < 4 ; i ++ ) {
+        function_pointer[i] = &f;
+        diff[i] = &df;
+    }
+
+    //diff[4] = &dldz;  // df,df,df,df,dl
+    keep[4][0] = 0.5;
+    keep[4][1] = 0.5;
+    keep[4][2] = 0.5;
+    keep[4][3] = 0.5;
+
+    for (int layer = 0 ; layer < 3 ; layer ++) {
+        for (int node = 0 ; node < 2 ; node ++ ) {
+            float sum = 0;
+            for (int p = 0 ; p < 2 ; p ++) {
+                if (layer == 0) {
+                    //printf("%d %d input %.2f x weight %.2f",node,p,input[p],weight[layer][node*2+p]);
+                    sum += input[p]*weight[layer][node*2+p];
+                    //printf(" sum within = %f\n",(input[p]*weight[layer][node*2+p]));
+                    keep[layer][node*2+p] = input[p];
+                }else{
+                    //printf("%d %d input %.2f x weight %.2f",node,p,pre1[p],weight[layer][node*2+p]);
+                    sum += (pre1[p]*weight[layer][node*2+p]);
+                    //printf(" sum within = %f\n",(pre1[p]*weight[layer][node*2+p]));
+                    keep[layer][node*2+p] = pre1[p];
+                }
+            }
+        sum += bias[layer][node];
+        sum = (*function_pointer[layer])(sum);
+        pre2[node] = sum;
+        //z[layer][node] = sum;
+        //printf("this node = %f\n",sum);
+        }
+        pre1[0] = pre2[0] ;
+        pre1[1] = pre2[1] ;
+    }
+
+    printf("last hidden %f %f\n",pre1[0],pre1[1]);
+
+    pre2[0] = pre1[0] * weight[3][0] + pre1[1] * weight[3][1] + bias[3][0];
+    pre2[1] = pre1[0] * weight[3][2] + pre1[1] * weight[3][3] + bias[3][1];
+    keep[3][0] = pre1[0];
+    keep[3][1] = pre1[1];
+    keep[3][2] = pre1[0];
+    keep[3][3] = pre1[1];
+
+    printf("output %f + %f = %f   loss %f\n",pre2[0],pre2[1],pre2[0]/2+pre2[1]/2,loss((pre2[0]+pre2[1])/2));
+
+
+    printf("\nlayer : output\n");
+    for (int lastnode = 1 ; lastnode >= 0 ; lastnode -- ) {
+        printf("node %.2f  weight %.2f  ",pre2[lastnode],0.5);
+
+        printf("dl/dw %7.3f   dl/dz %7.3f",pre2[lastnode],0.5);
+
+        printf("\n");
+    }
+
+
+
+
+
+
+    float dzdw,dzdz ;
+    // df,df,df,df,dl
+    for(int w_layer = 3 ; w_layer >= 0 ; w_layer-- ) {
+        printf("\n\nlayer : %d\n\n",w_layer);
+        for (int lastnode = 1 ; lastnode >= 0 ; lastnode -- ) {
+            for (int backernode = 1 ; backernode >= 0 ; backernode --) {
+                printf("keep %3.0f |",keep[w_layer][lastnode*2+backernode]);
+
+                printf("weight %.1f |",weight[w_layer][lastnode*2+backernode]);
+
+                dzdw = dzdw_function(w_layer,lastnode,backernode);
+                dzdz = dzdz_function(w_layer,lastnode,backernode);
+
+
+
+                printf("\n");
+
+                printf("dz/dw %3.0f |",dzdw);
+
+                printf("dz/dz %.1f |",dzdz);
+
+                printf("dl/dz %.2f |",dzdz*keep[w_layer+1][lastnode+backernode*2]);
+                //printf("= %f x %f |",dzdz,keep[w_layer+1][lastnode+backernode*2]);
+
+                printf("dl/dw %f |",dzdw*dzdz*keep[w_layer+1][lastnode+backernode*2]);
+
+                keep[w_layer][lastnode*2+backernode] = dzdz*keep[w_layer+1][lastnode+backernode*2];
+
+                printf("\n\n");
+
+            }
+        }
+
+        //printf("%f %f %f %f\n",keep[w_layer][0],keep[w_layer][1],keep[w_layer][2],keep[w_layer][3]);
+
+        keep[w_layer][0] = keep[w_layer][0] + keep[w_layer][2];
+        keep[w_layer][2] = keep[w_layer][0];
+        keep[w_layer][1] = keep[w_layer][1] + keep[w_layer][3];
+        keep[w_layer][3] = keep[w_layer][1];
+
+        //printf("%f %f %f %f\n",keep[w_layer][0],keep[w_layer][1],keep[w_layer][2],keep[w_layer][3]);
+    }
+
+    //value = (*function_pointer[2])(1.0);
+
+    //printf("%f",value);
+
+}
+
+
+
+float dldw (int layer ,int w_lastnode , int w_nextnode) {
+    float z = keep[layer][w_lastnode*2+w_nextnode];
+    return z ;
+}
+
+
+
+
+
+
+
+
+
+

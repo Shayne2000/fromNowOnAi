@@ -16,13 +16,16 @@ double init_weights(){
     return((double)rand()) / ((double)RAND_MAX)* 2.0 - 1.0;
 }
 
-void shuffle(int *array ,int size_training){
+void shuffle(int *array ,int size_training){ //array and size of array
     if(size_training > 1){
         for(int i=0; i<size_training; i++){
-            int j = i + rand() % (size_training-i);
+            int j = i + (rand() % (size_training-i));  // random between 0 to sizeof the rest than +i to index to swap
+
+            ////// swap ///////
             int t = array[j];
             array[j] = array[i];
             array[i] = t;
+            ////////////////////
         }
     }
 }
@@ -45,10 +48,10 @@ void train_test_split(){
     }*/
 //-----------------------------------------------------------------------------
     int index[row_Num]; //shuffle data
-    for(int i=0; i<row_Num; i++){
+    for(int i=0; i<row_Num; i++){ 
         index[i] = i;
     }
-    shuffle(index, row_Num);
+    shuffle(index, row_Num); //suffle just index
 
     for (int i=0; i < Train_Size; i++) { //train data
         for (int j = 0; j < feature_num; j++) {
@@ -66,20 +69,20 @@ void train_test_split(){
 }
  //-------------------- main -------------------------------------------------------
 int main(){
-    srand((unsigned int)time(NULL));
+    srand((unsigned int)time(NULL)); //genarate random seed
     int hiddenLayers_num;
 
     printf("Hidden Layer: ");//ask amount of hidden layer
     scanf("%d", &hiddenLayers_num);
      if (hiddenLayers_num < 1){
         printf("Invalid hidden layer number. Exiting.\n");
-        return -1;
+        return -1;  //kill the program if hiddenlayer doesn't provied
     }
 
-    int *HiddenNode_num = malloc(hiddenLayers_num * sizeof(int));
+    int *HiddenNode_num = malloc(hiddenLayers_num * sizeof(int));  //for dimention
     int hiddenNode_n;
 
-    printf("Number of Hidden Nodes: ");//ask amount of hidden node
+    printf("Number of Hidden Nodes: ");//ask amount of hidden node ??????????
     scanf("%d", &hiddenNode_n);
     if (hiddenNode_n < 1) {
             printf("Invalid hidden node number in layer %d. Exiting.\n");
@@ -87,47 +90,48 @@ int main(){
             return -1;
     }
 
-    for (int i = 0; i<hiddenLayers_num; i++) {
+    for (int i = 0; i<hiddenLayers_num; i++) { // number of node in each layer shouldn't be fixed at one number
             HiddenNode_num[i] = hiddenNode_n;//amount of node in each hidden layer
     }
 
-    printf("\nNetwork structure:\n"); //just show amount of hidden layer, node
+    printf("\nNetwork structure:\n"); //just show amount of hidden layer, node ????????????
     for (int i = 0; i < hiddenLayers_num; i++)
         printf(" Hidden Layer %d: %d nodes\n", i + 1, HiddenNode_num[i]);
     //-------------------------------------------------------------------------------------
     train_test_split();
     //---------------------------------------------------------------------------------------
-    float hiddenLayersBias[hiddenLayers_num][hiddenNode_n];
+    float hiddenLayersBias[hiddenLayers_num][hiddenNode_n]; //make it one-dimention array
     float outputLayersBias[numOutput];
 
-    float hiddenWeights[hiddenLayers_num][hiddenNode_n][Max_node];
-    float outputWeights[hiddenNode_n][numOutput];
+    float hiddenWeights[hiddenLayers_num][hiddenNode_n][Max_node]; //one-dimention array
+    float outputWeights[hiddenNode_n][numOutput]; //one dimention array
 
-    for(int i = 0; i < hiddenLayers_num; i++){//random hidden layer weight
+    for(int layer = 0; layer < hiddenLayers_num; layer++){//random hidden layer weight
         int input_size;
-        if(i==0) input_size = feature_num;
-        else input_size = hiddenNode_n;
-        for(int j=0; j < hiddenNode_n; j++){
-            for(int k = 0; k < input_size; k++){
-            hiddenWeights[i][j][k] = init_weights();
+        if (layer == 0) input_size = feature_num;
+        else input_size = hiddenNode_n; //dimention at [layer-1]
+        for(int current_node=0 ; current_node < hiddenNode_n ; current_node++){  //dimention at [layer]
+            for(int previous_node = 0; previous_node < input_size; previous_node++){
+            hiddenWeights[i][j][k] = init_weights();  //find index from dimention {1*a,2*b,3}
             }
         }
     }
 
-
-    for(int i=0; i < hiddenNode_n; i++){//random output's weight
-        for(int j=0; j < numOutput; j++){
-            outputWeights[i][j] = init_weights();
+//random output's weight 
+    for(int lastinput_node = 0; lastinput_node < hiddenNode_n; lastinput_node++){//from last node_num from dimention
+        for(int output_node = 0; output_node < numOutput; output_node++){
+            outputWeights[i][j] = init_weights();//find index from dimention {1*a,2*b,3}
         }
     }
 
-    for(int i = 0; i < numOutput; i++){//random output's bias
-        outputLayersBias[i] = init_weights();
+    for(int output_node = 0; output_node < numOutput; output_node++){//random output's bias
+        outputLayersBias[output_node] = init_weights();
     }
 
-    for(int i = 0; i < hiddenLayers_num; i++){//random hidden's bias
-        for(int j = 0; j < hiddenNode_n; j++)
-            hiddenLayersBias[i][j] = init_weights();
+    //random hidden's bias
+    for(int layer = 0; layer < hiddenLayers_num; layer++){
+        for(int node = 0; node < hiddenNode_n; node++)    ////find num from dimention at [layer]
+            hiddenLayersBias[i][j] = init_weights(); //find index from dimention {1*a,2*b,3}
     }
 
     printf("\nHidden weight\n");

@@ -454,7 +454,7 @@ float features_train[1][1] = {{1}}; //get from csv's data
 float weights[1][1] = {{1}}; //from random
 float bias[1][1] = {{1}}; //from random
 
-int sum ; //declare here is fine
+float sum ; //declare here is fine
 float weight_adjust_record[1][1][1] = {{{0}}}; //fix dimention
 float bias_adjust_record[1][1][1] = {{{0}}}; //fix dimention
 
@@ -465,15 +465,30 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
 
         for (int layer_num = 0 ; layer_num < layers ; layer_num ++ ) {
 
-            sum = 0;
-
             for (int node_num = 0 ; node_num < dimention[layer_num] ; node_num++){
+                sum = 0;
+                if (layer_num == 0) {
+                    for (int previous_node = 0 ; previous_node < input_num ; previous_node++ ) {
+                        sum += input[p] * weights[layer_num][node_num*2+previous_node] ;
+                        keep[layer_num][node_num*2+previous_node] = input[previous_node] ;
+                    }
+                    
+                }else{
 
-                sum += features_train[row][node_num] * weights[layer_num][node_num];
+                    for (int previous_node = 0 ; previous_node < dimention[layer_num-1]; previous_node ++ ) {
+                    
+                        sum += input[p] * weights[layer_num][node_num*2+previous_node] ;
+                        keep[layer_num][node_num*2+previous_node]
+                    }
+                }
+                
+                sum = (*functions_pointer[layer_num])(sum) ;
+                pre2[node] = sum ;
                 
             }
 
-            functions_pointer[layer_num](sum+bias[node_num]);
+            pre1[0] = pre2[0] ;
+            pre1[1] = pre2[1] ; 
 
         }
 
@@ -481,6 +496,21 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
 
         weight_adjust_record[][][] += (dLoss/dweight)/row_num ;
         bias_adjust_record[][][] += (dloss/dbias)/row_num ;
+
+
+        float dzdw,dzdz ;
+
+        for (int layer_num = layers ; layer_num >= 0 ; layer_num --) {
+            for (int furter_node = dimention[layer_num]-1 ; furter_node >= 0 ; furter_node --) {
+                for (int closer_node = dimention[layer_num-1]-1 ; closer_node >= 0 ; closer_node--) {
+                    dzdw = dzdw_function;
+                    dzdz = dzdz_function;
+
+                    keep[layer_num][furter_node][closer_node] = dzdz * keep[w_layer+1][furter_node][closer_node] ;
+                }
+            }
+        }
+
 
     }
 
