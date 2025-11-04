@@ -28,8 +28,8 @@ char all_column_names[MAX_COLS][MAX_COL_NAME_LEN];
 int num_columns = 0;
 
 
-char selected_features[SELECTION_SIZE][MAX_COL_NAME_LEN]; //features to select as x     max_row_lenght ?
-char selected_label[MAX_COL_NAME_LEN];                    //label to sclect as y
+char selected_features[SELECTION_SIZE][MAX_COL_NAME_LEN]; //kepp name of features to select as x     max_row_lenght ?
+char selected_label[MAX_COL_NAME_LEN];                    //keep naem of label to sclect as y
 int feature_n = 0;                       // Counter for the number of selected features
 
 
