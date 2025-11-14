@@ -123,6 +123,8 @@ int main() {
 
                 printf("weight %.1f |",weight[w_layer][lastnode*2+backernode]);
 
+                printf("bias %.1f |",bias[w_layer][lastnode]);
+
                 dzdw = dzdw_function(w_layer,lastnode,backernode);
                 dzdz = dzdz_function(w_layer,lastnode,backernode);
 
@@ -134,10 +136,12 @@ int main() {
 
                 printf("dz/dz %.1f |",dzdz);
 
-                printf("dl/dz %.2f |",dzdz*keep[w_layer+1][lastnode+backernode*2]);
+                printf("dl/dz = dl/db = %.2f |",dzdz*keep[w_layer+1][lastnode+backernode*2]);
                 //printf("= %f x %f |",dzdz,keep[w_layer+1][lastnode+backernode*2]);
 
                 printf("dl/dw %f |",dzdw*dzdz*keep[w_layer+1][lastnode+backernode*2]);
+
+                //printf("dl/db %f |",)
 
                 keep[w_layer][lastnode*2+backernode] = dzdz*keep[w_layer+1][lastnode+backernode*2];
 
@@ -168,8 +172,6 @@ float dldw (int layer ,int w_lastnode , int w_nextnode) {
     float z = keep[layer][w_lastnode*2+w_nextnode];
     return z ;
 }
-
-
 
 
 
