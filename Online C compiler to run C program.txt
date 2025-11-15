@@ -66,7 +66,7 @@ int main() {
             for (int p = 0 ; p < 2 ; p ++) {
                 if (layer == 0) {
                     //printf("%d %d input %.2f x weight %.2f",node,p,input[p],weight[layer][node*2+p]);
-                    sum += (input[p]*weight[layer][node*2+p]);
+                    sum += input[p]*weight[layer][node*2+p];
                     //printf(" sum within = %f\n",(input[p]*weight[layer][node*2+p]));
                     keep[layer][node*2+p] = input[p];
                 }else{
