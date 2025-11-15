@@ -12,8 +12,8 @@
 #define Train_Size ((int)(row_Num * Train_Ratio))
 #define Test_Size (row_Num - Train_Size)
 
-double init_weights(){
-    return((double)rand()) / ((double)RAND_MAX)* 2.0 - 1.0;
+float init_weights(){
+    return((float)rand()) / ((float)RAND_MAX)* 2.0 - 1.0;
 }
 
 void shuffle(int *array ,int size_training){ //array and size of array
@@ -194,3 +194,4 @@ int main(){
     free(outputLayersBias);
     return 0;
 }
+
