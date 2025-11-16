@@ -59,19 +59,22 @@ float test (float a) {
 
 int main() {
 
-    clear_console(); 
 
-
+int adjust_times = 1; // have to get user input first -----> do it later
 
 /////////////// read file, show to user and make user select (feture,row,label) ////////// output --> features,label,features_num ////////
 
-
+float losses[adjust_times] ;
 
 int layers = 1 ; //get from user input
 
 float (*functions_pointer[layers])(float) ;
+float (*dfunction_pointer[layers])(float) ;
+float (*lfunction_pointer[layers])(float) ;
 
 functions_pointer[0] = &test; //loop trought user input
+dfunction_pointer[0] = &test;
+lfunction_pointer[0] = &test;
 
 // printf("%d",functions_pointer[0]());
 
@@ -85,7 +88,7 @@ functions_pointer[0] = &test; //loop trought user input
 ////////////// main program /////////////
 
 
-int adjust_times = 1; // have to get user input first -----> do it later
+
 
 int dimention[1] = {1}; // set of nodes inputed from user   [3,4,1]
 float features_train[1][1] = {{1}}; //get from csv's data   
@@ -114,7 +117,7 @@ for (int layer_num = 0 ; layer_num < layers ; layer_num ++ ) {
 number_of_node += output_num ;
 
 
-float dzdw[z_size] ;
+float dzdw_array[z_size] ;
 float activationfunction_outputs[number_of_node];
 
 float weight_adjust_record[1][1][1] = {{{0}}}; //fix dimention
@@ -137,7 +140,7 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
 
                         
                         sum += all_data[row].feature_values[previous_node] * weights[layer_num][node_num*2+previous_node] ;
-                        dzdw[z_index++] = all_data[row].feature_values[previous_node] ;
+                        dzdw_array[z_index++] = all_data[row].feature_values[previous_node] ;
                         
                     }
                     
@@ -147,7 +150,7 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
                     
                         
                         sum += activationfunction_outputs[previous_node] * weights[layer_num][node_num*2+previous_node] ;
-                        dzdw[z_index++] = activationfunction_outputs[z_lastlayer_index+previous_node] ;
+                        dzdw_array[z_index++] = activationfunction_outputs[z_lastlayer_index+previous_node] ;
                     }
                 }
             
@@ -159,15 +162,35 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
 
         }
 
+        for (int outputnode_num = 0 ; outputnode_num < output_num ; outputnode_num ++) {
+            sum = 0 ;
+            for (int lasthiddennode_num = 0 ; lasthiddennode_num < dimention[sizeof(dimention)/sizeof(int)-1]; lasthiddennode_num++){
+                sum += activationfunction_outputs[lasthiddennode_num] * weights[lastlayer][node];
+                dzdw_array[last] = activationfunction_outputs[lasthiddennode_num]
+            }
 
+            sum += bias[lastlayer][outputnode_num] ;
+            sum = (*functions_pointer[outputnode_num])(sum);
+            activationfunction_outputs[outputnode_num] = sum ;
+        }
 
-        float dzdw,dzdz ;
+        output = activationfunction_outputs[lastlayer];
 
-        for (int layer_num = layers ; layer_num >= 0 ; layer_num --) {
+        losses[adjust_time_count] = (*lfunction_pointer)(output);
+
+        float dzdw,dzdz,dldlast_z,dvaluedz ;
+
+        for (int layer_num = layers-1 ; layer_num >= 0 ; layer_num --) {
             for (int furter_node = dimention[layer_num]-1 ; furter_node >= 0 ; furter_node --) {
                 for (int closer_node = dimention[layer_num-1]-1 ; closer_node >= 0 ; closer_node--) {
-                    dzdw = dzdw_function;
-                    dzdz = dzdz_function;
+
+                    dldlast_z = 
+
+                    dvaluedz = (*dfunction_pointer[layer_num])(activationfunction_outputs[z_index]);
+
+                    dzdw = dzdw_array[z_index--] ;
+                    
+                    dldz = dldlast_z * d
 
                     keep[layer_num][furter_node][closer_node] = dzdz * keep[w_layer+1][furter_node][closer_node] ;
                 }
