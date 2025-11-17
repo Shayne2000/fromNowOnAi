@@ -7,36 +7,27 @@
 ///////////////////////////////  declare variables //////////////////////
 
 
-#define MAX_COLS 100           // Maximum number of columns expected
-#define MAX_COL_NAME_LEN 30   // Maximum length of a column name
-#define SELECTION_SIZE 100     // Maximum number of features that can be selected
-#define MAX_ROW_LENGTH 250  // Maximum expected length of a single row
-#define FILE_NAME_LEN 100      // Maximum expected length file name
 
 
 typedef struct {
-    float feature_values[SELECTION_SIZE]; // Values of the selected features
+    float feature_values[100]; // Values of the selected features
     float label_value;                    // Value of the selected label
 } DataRow;
 
 
-char file_name[FILE_NAME_LEN];// Global variable for file name
 
 
-// Global variables to store column names
-char all_column_names[MAX_COLS][MAX_COL_NAME_LEN];
-int num_columns = 0;
 
 
-char selected_features[SELECTION_SIZE][MAX_COL_NAME_LEN]; //kepp name of features to select as x     max_row_lenght ?
-char selected_label[MAX_COL_NAME_LEN];                    //keep naem of label to sclect as y
+
+
 int feature_n = 0;                       // Counter for the number of selected features
 
 
 // variables for data storage and indices
-int row_num = 0;      // Total number of rows
+int row_num = 1;      // Total number of rows
 DataRow *all_data = NULL;  // Pointer to hold the array of DataRow (Actual data)
-int selected_feature_indices[SELECTION_SIZE]; // 0-based index of selected features
+
 int selected_label_index = -1;                 // 0-based index of the selected label
 
 
@@ -44,9 +35,9 @@ int selected_label_index = -1;                 // 0-based index of the selected 
 
 
 float test (float a) {
-    for (int i = 0 ; i < 10 ; i ++) {
-        printf("test");
-    }
+    
+    printf("activated a function\n");
+    
 
     return 0;
 }
@@ -130,14 +121,20 @@ int z_lastlayer_index = -1 ;
 float *output ;
 output = malloc(output_num*sizeof(float)) ;
 
+float learning_rate = 0.01 ;
+
 for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_count ++) {
 
     printf("loop number : %d\n",adjust_time_count);
 
-    float weight_adjust_record[1][1] = {{0}}; //fix dimention
-    float bias_adjust_record[1][1] = {{0}}; //fix dimention
+    float weight_adjust_record[1][1] = {{1}}; //fix dimention//////////////////////////////////////////////
+    float bias_adjust_record[1][1] = {{0}}; //fix dimention////////////////////////////////////////////////
+
+    printf("there is %d rows of data\n\n",row_num);
 
     for (int row = 0 ; row < row_num ; row ++ ) {
+
+        printf("in loop %d, run trought row : %d\n",adjust_time_count,row);
 
         int z_index = 0; //for tracking index easily
 
@@ -159,41 +156,43 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
                     for (int previous_node = 0 ; previous_node < dimention[layer_num-1]; previous_node ++ ) {
                     
                         
-                        sum += activationfunction_outputs[previous_node] * weights[layer_num][node_num*2+previous_node] ;
-                        dzdw_array[z_index++] = activationfunction_outputs[z_lastlayer_index+previous_node] ;
+                        sum += activationfunction_outputs[previous_node] * weights[layer_num][node_num*2+previous_node] ;//////////////////////////////////////////////////////
+                        dzdw_array[z_index++] = activationfunction_outputs[z_lastlayer_index+previous_node] ;////////////////////////////////////////////////////////////////
                     }
                 }
             
-                sum += bias[layer_num][node_num] ;
+                sum += bias[layer_num][node_num] ; /////////////////////////////////////////////////////////////////////
                 sum = (*functions_pointer[layer_num])(sum) ;
-                activationfunction_outputs[node_num] = sum ;
+                activationfunction_outputs[node_num] = sum ; ////////////////////////////////////////////////////////////
+
+                printf("output in this node : %f\n",sum);
                 
             }
 
         }
 
-        for (int outputnode_num = 0 ; outputnode_num < output_num ; outputnode_num ++) {
+        for (int outputnode_num = 0 ; outputnode_num < output_num ; outputnode_num ++) { ///////////////////////////////////////////////
             sum = 0 ;
             for (int lasthiddennode_num = 0 ; lasthiddennode_num < dimention[sizeof(dimention)/sizeof(int)-1]; lasthiddennode_num++){
-                sum += activationfunction_outputs[lasthiddennode_num] * weights[layers][outputnode_num*2+lasthiddennode_num];
-                dzdw_array[z_index++] = activationfunction_outputs[lasthiddennode_num];
+                sum += activationfunction_outputs[lasthiddennode_num] * weights[layers][outputnode_num*2+lasthiddennode_num]; //////////////////////////////////////////////////
+                dzdw_array[z_index++] = activationfunction_outputs[lasthiddennode_num]; ////////////////////////////////////////////////////////////////////////////
             }
 
-            sum += bias[layers][outputnode_num] ;
-            sum = (*functions_pointer[outputnode_num])(sum);
-            activationfunction_outputs[outputnode_num] = sum ;
+            sum += bias[layers][outputnode_num] ; /////////////////////////////////////////////////////////////
+            sum = (*functions_pointer[outputnode_num])(sum);///////////////////////////////////////////////////
+            activationfunction_outputs[outputnode_num] = sum ;///////////////////////////////////////
         }
 
-        *output = activationfunction_outputs[layers];
+        *output = activationfunction_outputs[layers]; ///////////////////////////////////////////////////
 
-///////////////// form here, activationfunction_output will keep dl/dz value ////////////////////////
+///--------------------- form here, activationfunction_output will keep dl/dz value ----------------------
 
-        losses[adjust_time_count] = (*lfunction_pointer)(*output);
+        losses[adjust_time_count] = (*lfunction_pointer)(*output); ////////////////////////////////////////
 
         float dzdw,dzdz,dzdb,dldlast_z,dvaluedz,dlast_zdvalue,dldz ;
 
-        for (int layer_num = layers-1 ; layer_num >= 0 ; layer_num --) {
-            for (int closer_node = dimention[layer_num-1]-1 ; closer_node >= 0 ; closer_node--) {
+        for (int layer_num = layers-1 ; layer_num >= 0 ; layer_num --) { ///////////////////////////////////////
+            for (int closer_node = dimention[layer_num-1]-1 ; closer_node >= 0 ; closer_node--) { /////////////////////////////////////////
 
                 if (closer_node == dimention[layer_num-1]-1) {
                     for (int outputnode_num = output_num ; outputnode_num >= 0 ; outputnode_num--) {
@@ -204,42 +203,41 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
 
                     for (int furter_node = dimention[layer_num]-1 ; furter_node >= 0 ; furter_node --) {
 
-                        dldlast_z = activationfunction_outputs[furter_node] ;
+                        dldlast_z = activationfunction_outputs[furter_node] ; ///////////////////////////////////////////////////////////
 
-                        dlast_zdvalue = weights[layer_num][furter_node*2+closer_node] ;
+                        //dlast_zdvalue = weights[layer_num][furter_node*2+closer_node] ; //segmentation false
+                        dlast_zdvalue = 1 ;
 
-                        dvaluedz = (*dfunction_pointer[layer_num])(activationfunction_outputs[z_index]);
+                        dvaluedz = (*dfunction_pointer[layer_num])(activationfunction_outputs[z_index]);///////////////////////////////////////////
 
-                        dzdw = dzdw_array[z_index--] ;
+                        dzdw = dzdw_array[z_index--] ; /////////////////////////////////////////////////////////////////////
                         //dzdb = 1;
                         
                         dldz = dldlast_z * dlast_zdvalue * dvaluedz ;
 
-                        activationfunction_outputs[closer_node] = dldz ;
+                        //activationfunction_outputs[closer_node] = dldz ; //segmentation false ///////////////////////
+                        activationfunction_outputs[0] = dldz ; 
+
+                        //weight_adjust_record[layer_num][furter_node*2+closer_node] += (dldz * dzdw)/row_num ; //segmentation false
+                        weight_adjust_record[0][0] += (dldz * dzdw)/row_num ;
+                        //bias_adjust_record[layer_num][closer_node] += (dldz)/row_num ; //segmentation false
+                        bias_adjust_record[0][0] += (dldz)/row_num ;
                     }
                 }
                 
             }
         }
 
-        // redo it   still not rate of change
-        for (int layer_num = 0 ; layer_num < layers ; layer_num++) {
-            for (int previous_node = 0 ; previous_node < dimention[layer_num] ; previous_node++) {
-                for (int next_node = 0 ; next_node < dimention[layer_num+1] ; next_node++) {
-                    weight_adjust_record[layer_num][previous_node*2+next_node] += weights[layer_num][previous_node*1+next_node]/row_num ;
-                }
-            }
-            
-        }
-        
-
     }
 
-    for (int layer_num = 0 ; layer_num < layers ; layer_num++) {
-        for (int previous_node = 0 ; previous_node < dimention[layer_num] ; previous_node++) {
-            for (int next_node = 0 ; next_node < dimention[layer_num+1] ; next_node++) {
-                weights[layer_num][previous_node*2+next_node] = weight_adjust_record[layer_num][previous_node*1+next_node]/row_num ;
+    for (int layer_num = 0 ; layer_num < layers ; layer_num++) { //////////////////////////////////
+        for (int next_node = 0 ; next_node < dimention[layer_num+1] ; next_node++) {
+            for (int previous_node = 0 ; previous_node < dimention[layer_num] ; previous_node++) {
+                weights[layer_num][previous_node*2+next_node] -= weight_adjust_record[layer_num][previous_node*1+next_node] * learning_rate ;
             }
+
+            bias[layer_num][next_node] -= bias_adjust_record[layer_num][next_node] * learning_rate ;
+
         }
             
     }
@@ -247,10 +245,10 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
 }
 
 
+printf("final bias : %f\n",bias[0][0]);
 
 
-
-
+printf("end of program....");
 ///////////// output ////////////////////
 
 return 0;
