@@ -1,66 +1,133 @@
 #include <stdio.h>
 #include <math.h>
 
-// 1. Sigmoid
+// sigmoid
 float sigmoid(float x) {
-    return 1.0 / (1.0 + exp(-x));
+    return 1.0f / (1.0f + expf(-x));
+}
+float d_sigmoid(float x) {
+    float s = sigmoid(x);
+    return s * (1.0f - s);
 }
 
-// 2. ReLU
+// relu
 float relu(float x) {
-    if (x > 0)
-        return x;
-    else
-        return 0;
+    return (x > 0) ? x : 0;
+}
+float d_relu(float x) {
+    return (x > 0) ? 1.0f : 0.0f;
 }
 
-// 3. Leaky ReLU
+// leaky relu
 float leaky_relu(float x) {
-    if (x > 0)
-        return x;
-    else
-        return 0.01 * x;
+    return (x > 0) ? x : 0.01f * x;
+}
+float d_leaky_relu(float x) {
+    return (x > 0) ? 1.0f : 0.01f;
 }
 
-// 4. Tanh
+// tanh
 float my_tanh(float x) {
-    float e_pos = exp(x);
-    float e_neg = exp(-x);
-    return (e_pos - e_neg) / (e_pos + e_neg);
+    float a = expf(x);
+    float b = expf(-x);
+    return (a - b) / (a + b);
+}
+float d_my_tanh(float x) {
+    float t = my_tanh(x);
+    return 1.0f - (t * t);
 }
 
-// 5. Softsign
+// softsign
 float softsign(float x) {
-    return x / (1 + fabs(x));
+    return x / (1.0f + fabsf(x));
+}
+float d_softsign(float x) {
+    float d = 1.0f + fabsf(x);
+    return 1.0f / (d * d);
 }
 
-// 6. ELU
+// elu
 float elu(float x, float alpha) {
-    if (x >= 0)
-        return x;
-    else
-        return alpha * (exp(x) - 1);
+    return (x >= 0) ? x : alpha * (expf(x) - 1.0f);
+}
+float d_elu(float x, float alpha) {
+    return (x >= 0) ? 1.0f : alpha * expf(x);
 }
 
-// 7. Swish
+// softplus
+float softplus(float x) {
+    return logf(1.0f + expf(x));
+}
+float d_softplus(float x) {
+    return sigmoid(x);
+}
+
+// swish
 float swish(float x) {
     return x * sigmoid(x);
 }
-
-// 8. Softplus
-float softplus(float x) {
-    return log(1 + exp(x));
+float d_swish(float x) {
+    float s = sigmoid(x);
+    return s + x * s * (1.0f - s);
 }
 
-// 9. Binary Step
+// binary step
 float binary_step(float x) {
-    if (x >= 0)
-        return 1.0;
-    else
-        return 0.0;
+    return (x >= 0) ? 1.0f : 0.0f;
+}
+float d_binary_step(float x) {
+    return 0.0f;
 }
 
-// 10. Linear
+// linear
 float linear(float x) {
     return x;
+}
+float d_linear(float x) {
+    return 1.0f;
+}
+
+// mish
+float mish(float x) {
+    return x * my_tanh(softplus(x));
+}
+float d_mish(float x) {
+    float sp = softplus(x);
+    float t = my_tanh(sp);
+    float s = sigmoid(x);
+    return t + x * (1.0f - t * t) * s;
+}
+
+// hard-sigmoid
+float hard_sigmoid(float x) {
+    float r = (0.2f * x) + 0.5f;
+    if (r < 0) r = 0;
+    if (r > 1) r = 1;
+    return r;
+}
+float d_hard_sigmoid(float x) {
+    return (x > -2.5f && x < 2.5f) ? 0.2f : 0.0f;
+}
+
+// hard-swish
+float hard_swish(float x) {
+    return x * hard_sigmoid(x);
+}
+float d_hard_swish(float x) {
+    float hs = hard_sigmoid(x);
+    float d_hs = d_hard_sigmoid(x);
+    return (hs + x * d_hs);
+}
+
+// softmax
+void softmax(float arr[], float out[], int n) {
+    float sum = 0;
+    for(int i = 0; i < n; i++)
+        sum += expf(arr[i]);
+    for(int i = 0; i < n; i++)
+        out[i] = expf(arr[i]) / sum;
+}
+
+int main() {
+    return 0;
 }
