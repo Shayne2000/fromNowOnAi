@@ -164,7 +164,7 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
 
     for (int row = 0 ; row < row_num ; row ++ ) {
 
-        printf("\n             run trought row : %d\n",adjust_time_count,row);
+        printf("\n             run trought row : %d\n",row);
 
         int z_index = 0; //for tracking index easily
 
@@ -194,6 +194,7 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
                 }
             
                 sum += bias[layer_num][node_num] ; /////////////////////////////////////////////////////////////////////
+                printf("%f",bias[layer_num][node_num]);
                 sum = (*functions_pointer[layer_num])(sum) ;
                 activationfunction_outputs[node_num] = sum ; ////////////////////////////////////////////////////////////
 
@@ -230,40 +231,51 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
         losses[adjust_time_count] = (*lfunction_pointer)(*output); ////////////////////////////////////////
 
         float dzdw,dzdz,dzdb,dldlast_z,dvaluedz,dlast_zdvalue,dldz ;
+        printf("\n---------start backpropagation-------------\n");
 
-        for (int layer_num = layers-1 ; layer_num >= 0 ; layer_num --) { ///////////////////////////////////////
-            for (int closer_node = dimention[layer_num-1]-1 ; closer_node >= 0 ; closer_node--) { /////////////////////////////////////////
+        printf("prepare for backprop -->  0 <= layer <= %d\n",layers-1);
+        for (int layer_num = layers - 1 ; layer_num >= 0 ; layer_num = layer_num - 1) { ///////////////////////////////////////
+            //printf("layer num for backprop : %d\n",layer_num);
+            
+            float dlossdoutput ;
 
-                if (closer_node == dimention[layer_num-1]-1) {
-                    for (int outputnode_num = output_num ; outputnode_num >= 0 ; outputnode_num--) {
+            for (int outputnode_num = output_num-1 ; outputnode_num >= 0 ; outputnode_num--) {
 
-                    }
+                dlossdoutput = (*lfunction_pointer)(*(output+outputnode_num));
 
-                }else{
+                printf("yes\n");
+            }
 
-                    for (int furter_node = dimention[layer_num]-1 ; furter_node >= 0 ; furter_node --) {
+            printf("prepare for closer loop --> num : %d\n",dimention[layer_num]-1); 
+            for (int closer_node = dimention[layer_num]-1 ; closer_node >= 0 ; closer_node--) { ///segmentation false//////////////////////////////////////
+                printf("colsernode : %d\n",closer_node);
+                
 
-                        dldlast_z = activationfunction_outputs[furter_node] ; ///////////////////////////////////////////////////////////
+                printf("another yes\n");
 
-                        //dlast_zdvalue = weights[layer_num][furter_node*2+closer_node] ; //segmentation false
-                        dlast_zdvalue = 1 ;
+                for (int furter_node = dimention[layer_num]-1 ; furter_node >= 0 ; furter_node --) {
 
-                        //dvaluedz = (*dfunction_pointer[layer_num])(activationfunction_outputs[z_index]);/////////Segmentation fault//////////////////////////////////
-                        dvaluedz = (*dfunction_pointer[layer_num])(0);
+                    dldlast_z = activationfunction_outputs[furter_node] ; ///////////////////////////////////////////////////////////
 
-                        //dzdw = dzdw_array[z_index--] ; /////segmentation false////////////////////////////////////////////////////////////////
-                        dzdw = 1 ;
+                    //dlast_zdvalue = weights[layer_num][furter_node*2+closer_node] ; //segmentation false
+                    dlast_zdvalue = 1 ;
+
+                    //dvaluedz = (*dfunction_pointer[layer_num])(activationfunction_outputs[z_index]);/////////Segmentation fault//////////////////////////////////
+                    dvaluedz = (*dfunction_pointer[layer_num])(0);
+
+                    //dzdw = dzdw_array[z_index--] ; /////segmentation false////////////////////////////////////////////////////////////////
+                    dzdw = 1 ;
                         
-                        dldz = dldlast_z * dlast_zdvalue * dvaluedz ;
+                    dldz = dldlast_z * dlast_zdvalue * dvaluedz ;
 
-                        //activationfunction_outputs[closer_node] = dldz ; //segmentation false ///////////////////////
-                        activationfunction_outputs[0] = dldz ; 
+                    //activationfunction_outputs[closer_node] = dldz ; //segmentation false ///////////////////////
+                    activationfunction_outputs[0] = dldz ; 
 
-                        //weight_adjust_record[layer_num][furter_node*2+closer_node] += (dldz * dzdw)/row_num ; //segmentation false
-                        weight_adjust_record[0][0] += (dldz * dzdw)/row_num ;
-                        //bias_adjust_record[layer_num][closer_node] += (dldz)/row_num ; //segmentation false
-                        bias_adjust_record[0][0] += (dldz)/row_num ;
-                    }
+                    //weight_adjust_record[layer_num][furter_node*2+closer_node] += (dldz * dzdw)/row_num ; //segmentation false
+                    weight_adjust_record[0][0] += (dldz * dzdw)/row_num ;
+                    //bias_adjust_record[layer_num][closer_node] += (dldz)/row_num ; //segmentation false
+                    bias_adjust_record[0][0] += (dldz)/row_num ;
+                    
                 }
                 
             }
