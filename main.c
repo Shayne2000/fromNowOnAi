@@ -21,11 +21,11 @@ typedef struct {
 
 
 
-int feature_n = 1;                       // Counter for the number of selected features
+int feature_n = 3;                       // Counter for the number of selected features
 
 
 // variables for data storage and indices
-int row_num = 1;      // Total number of rows
+int row_num = 5;      // Total number of rows
 DataRow *all_data = NULL;  // Pointer to hold the array of DataRow (Actual data)
 
 int selected_label_index = -1;                 // 0-based index of the selected label
@@ -37,18 +37,47 @@ int selected_label_index = -1;                 // 0-based index of the selected 
 float test (float a) {
     
    // printf("activated a function\n");
-    
 
-    return 0;
+    return a;
 }
+#define SELECTION_SIZE 100
+#define MAX_COL_NAME_LEN 300
 
-
-
-
-
+char selected_features[SELECTION_SIZE][MAX_COL_NAME_LEN];
+char selected_label[MAX_COL_NAME_LEN];
 
 
 int main() {
+
+    strcpy(selected_features[0], "Age");          // เปลี่ยนได้เลย 
+    strcpy(selected_features[1], "Salary"); 
+    strcpy(selected_features[2], "Experience");  
+    strcpy(selected_label, "PerfScore"); 
+
+
+    all_data = malloc(row_num * sizeof(DataRow));
+    if (!all_data) {
+        printf("Memory alloc failed!\n");
+        return 1;
+    }
+
+
+    float feature_samples[5][3] = {  // เปลี่ยนขนาดได้เลือกตามต้องการเลย แต่ต้องสอดคร้องกับ [row_num][feature_num]
+        {25.0, 32000.0, 1.0},
+        {30.0, 45000.0, 3.0},
+        {22.0, 28000.0, 0.5},
+        {40.0, 60000.0, 10.0},
+        {35.0, 52000.0, 7.0}
+    };
+
+    float label_samples[5] = {3.5, 4.2, 3.0, 4.8, 4.5};
+
+    for (int r = 0; r < row_num; r++) {
+        for (int f = 0; f < feature_n; f++) {
+            all_data[r].feature_values[f] = feature_samples[r][f];
+        }
+        all_data[r].label_value = label_samples[r];
+    }
 
 
 printf("main program start\n");
@@ -85,12 +114,12 @@ lfunction_pointer[0] = &test;
 
 int dimention[1] = {1}; // set of nodes inputed from user   [3,4,1]
 float features_train[1][1] = {{1}}; //get from csv's data   
-float weights[1][1] = {{1}}; //from random
+float weights[1][3] = {{1,1,1}}; //from random
 float bias[1][1] = {{1}}; //from random
 
 float sum ; //declare here is fine
 int z_size = 0; //for set z_value-array size 
-int number_of_node = 0 ; // for set 
+int number_of_node = 0 ; // for set size of array according to nodes
 
 float output_num = 1 ;
 
@@ -130,11 +159,12 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
     float weight_adjust_record[1][1] = {{1}}; //fix dimention//////////////////////////////////////////////
     float bias_adjust_record[1][1] = {{0}}; //fix dimention////////////////////////////////////////////////
 
-    printf("there is %d rows of data\n\n",row_num);
+    //printf("there is %d rows of data\n",row_num);
+    printf("\n");
 
     for (int row = 0 ; row < row_num ; row ++ ) {
 
-        printf("in loop %d, run trought row : %d\n",adjust_time_count,row);
+        printf("\n             run trought row : %d\n",adjust_time_count,row);
 
         int z_index = 0; //for tracking index easily
 
@@ -146,8 +176,9 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
                     for (int previous_node = 0 ; previous_node < feature_n ; previous_node++ ) {
 
                         
-                        sum += all_data[row].feature_values[previous_node] * weights[layer_num][node_num*2+previous_node] ; //segmentation false ///////////////////
-                        
+                        sum += all_data[row].feature_values[previous_node] * weights[layer_num][node_num*2+previous_node] ;
+                        printf("(%f * %f) + ",all_data[row].feature_values[previous_node],weights[layer_num][node_num*2+previous_node]);
+
                         dzdw_array[z_index++] = all_data[row].feature_values[previous_node] ;
                         
                     }
@@ -170,11 +201,11 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
                 
             }
 
-            printf("finished one layer\n");
+            //printf("finished one layer\n");
 
         }
 
-        printf("finished forward propagation\n");
+        printf("\n-----finished forward propagation--------\n");
 
         for (int outputnode_num = 0 ; outputnode_num < output_num ; outputnode_num ++) { ///////////////////////////////////////////////
             sum = 0 ;
@@ -241,11 +272,18 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
     }
 
     for (int layer_num = 0 ; layer_num < layers ; layer_num++) { //////////////////////////////////
-        for (int next_node = 0 ; next_node < dimention[layer_num+1] ; next_node++) {
-            for (int previous_node = 0 ; previous_node < dimention[layer_num] ; previous_node++) {////////////////////////////////////////////
-                weights[layer_num][previous_node*2+next_node] -= weight_adjust_record[layer_num][previous_node*1+next_node] * learning_rate ;
+        for (int next_node = 0 ; next_node < dimention[layer_num] ; next_node++) {
+            if (layer_num == 0) {
+                for (int previous_node = 0 ; previous_node < feature_n ; previous_node++) {////////////////////////////////////////////
+                    weights[layer_num][previous_node*2+next_node] -= weight_adjust_record[layer_num][previous_node*1+next_node] * learning_rate ;
+                }
+            }else{
+                for (int previous_node = 0 ; previous_node < dimention[layer_num-1] ; previous_node++) {////////////////////////////////////////////
+                    weights[layer_num][previous_node*2+next_node] -= weight_adjust_record[layer_num][previous_node*1+next_node] * learning_rate ;
+                }
             }
 
+            //bias[layer_num][next_node] -= bias_adjust_record[layer_num][next_node] * learning_rate ; //segmentation false ///////////////////////////////////
             bias[layer_num][next_node] -= bias_adjust_record[layer_num][next_node] * learning_rate ;
 
         }
