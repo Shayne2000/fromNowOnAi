@@ -21,7 +21,7 @@ typedef struct {
 
 
 
-int feature_n = 0;                       // Counter for the number of selected features
+int feature_n = 1;                       // Counter for the number of selected features
 
 
 // variables for data storage and indices
@@ -36,7 +36,7 @@ int selected_label_index = -1;                 // 0-based index of the selected 
 
 float test (float a) {
     
-    printf("activated a function\n");
+   // printf("activated a function\n");
     
 
     return 0;
@@ -146,7 +146,8 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
                     for (int previous_node = 0 ; previous_node < feature_n ; previous_node++ ) {
 
                         
-                        sum += all_data[row].feature_values[previous_node] * weights[layer_num][node_num*2+previous_node] ;
+                        sum += all_data[row].feature_values[previous_node] * weights[layer_num][node_num*2+previous_node] ; //segmentation false ///////////////////
+                        
                         dzdw_array[z_index++] = all_data[row].feature_values[previous_node] ;
                         
                     }
@@ -169,7 +170,11 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
                 
             }
 
+            printf("finished one layer\n");
+
         }
+
+        printf("finished forward propagation\n");
 
         for (int outputnode_num = 0 ; outputnode_num < output_num ; outputnode_num ++) { ///////////////////////////////////////////////
             sum = 0 ;
@@ -183,7 +188,11 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
             activationfunction_outputs[outputnode_num] = sum ;///////////////////////////////////////
         }
 
+        printf("finish answering\n");
+
         *output = activationfunction_outputs[layers]; ///////////////////////////////////////////////////
+
+        printf("output saved\n");
 
 ///--------------------- form here, activationfunction_output will keep dl/dz value ----------------------
 
@@ -208,10 +217,11 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
                         //dlast_zdvalue = weights[layer_num][furter_node*2+closer_node] ; //segmentation false
                         dlast_zdvalue = 1 ;
 
-                        dvaluedz = (*dfunction_pointer[layer_num])(activationfunction_outputs[z_index]);///////////////////////////////////////////
+                        //dvaluedz = (*dfunction_pointer[layer_num])(activationfunction_outputs[z_index]);/////////Segmentation fault//////////////////////////////////
+                        dvaluedz = (*dfunction_pointer[layer_num])(0);
 
-                        dzdw = dzdw_array[z_index--] ; /////////////////////////////////////////////////////////////////////
-                        //dzdb = 1;
+                        //dzdw = dzdw_array[z_index--] ; /////segmentation false////////////////////////////////////////////////////////////////
+                        dzdw = 1 ;
                         
                         dldz = dldlast_z * dlast_zdvalue * dvaluedz ;
 
@@ -232,7 +242,7 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
 
     for (int layer_num = 0 ; layer_num < layers ; layer_num++) { //////////////////////////////////
         for (int next_node = 0 ; next_node < dimention[layer_num+1] ; next_node++) {
-            for (int previous_node = 0 ; previous_node < dimention[layer_num] ; previous_node++) {
+            for (int previous_node = 0 ; previous_node < dimention[layer_num] ; previous_node++) {////////////////////////////////////////////
                 weights[layer_num][previous_node*2+next_node] -= weight_adjust_record[layer_num][previous_node*1+next_node] * learning_rate ;
             }
 
@@ -244,8 +254,28 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
 
 }
 
+printf("\nprinting model \n\n");
 
-printf("final bias : %f\n",bias[0][0]);
+for (int layer_num = 0 ; layer_num < layers ; layer_num++) { 
+    //printf("model in layer : %d",layer_num);
+    for (int next_node = 0 ; next_node < dimention[layer_num] ; next_node++) {
+        //printf("node : %d",next_node);
+        if (layer_num == 0) {
+            for (int previous_node = 0 ; previous_node < feature_n ; previous_node++) {
+                printf("weight : %f\n",weights[layer_num][previous_node*2+next_node]);
+            }
+        }else {
+            for (int previous_node = 0 ; previous_node < dimention[layer_num-1] ; previous_node++) {
+                printf("weight : %f\n",weights[layer_num][previous_node*2+next_node]);
+            }
+        }
+        
+
+        printf("bias : %f\n",bias[layer_num][next_node]);
+
+    }
+            
+}
 
 
 printf("end of program....");
