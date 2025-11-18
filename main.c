@@ -92,13 +92,20 @@ int layers = 2 ; //get from user input
 
 float (*functions_pointer[layers])(float) ;
 float (*dfunction_pointer[layers])(float) ;
-float (*lfunction_pointer[layers])(float) ;
+float (*lfunction_pointer)(float) ;
+float (*dlfunction_pointer)(float) ;
 float (*outputfunctions_pointer)(float) ;
+float (*doutputfunction_pointer)(float) ;
+
 
 functions_pointer[0] = &test; //loop trought user input
+functions_pointer[1] = &test;
 dfunction_pointer[0] = &test;
-lfunction_pointer[0] = &test;
+dfunction_pointer[1] = &test;
+lfunction_pointer = &test;
+dlfunction_pointer = &test;
 outputfunctions_pointer = &test;
+doutputfunction_pointer = &test;
 
 // printf("%d",functions_pointer[0]());
 
