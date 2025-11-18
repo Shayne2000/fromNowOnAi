@@ -127,7 +127,7 @@ float weights[3][3] = {{1,1,1},{1},{1}}; //from random
 float bias[3][1] = {{1},{1},{1}}; //from random
 
 float sum ; //declare here is fine
-int z_size = 0; //for set z_value-array size 
+int w_size = 0; //for set z_value-array size 
 int number_of_node = 0 ; // for set size of array according to nodes
 
 float output_num = 1 ;
@@ -135,11 +135,11 @@ float output_num = 1 ;
 for (int layer_num = 0 ; layer_num < layers ; layer_num ++ ) {
     
     if (layer_num == 0) {
-        z_size += feature_n*dimention[layer_num] ;
+        w_size += feature_n*dimention[layer_num] ;
     }else if (layer_num+1 == layers) {
-        z_size += selected_label_index * dimention[layer_num] ;
+        w_size += selected_label_index * dimention[layer_num] ;
     }else {
-        z_size += dimention[layer_num-1] * dimention[layer_num] ;
+        w_size += dimention[layer_num-1] * dimention[layer_num] ;
     }
 
     number_of_node += dimention[layer_num] ;
@@ -149,7 +149,7 @@ for (int layer_num = 0 ; layer_num < layers ; layer_num ++ ) {
 number_of_node += output_num ;
 
 
-float dzdw_array[z_size] ;
+float dzdw_array[w_size] ;
 float z_keep [number_of_node] ;
 
 
@@ -174,7 +174,7 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
 
         printf("\n             run trought row : %d\n",row);
 
-        int z_index = 0; //for tracking index easily
+        int w_index = 0; //for tracking index easily
         int node_index = 0; // using with activationfunction_output
         int previouslayernode_sum = 0 ;//for tracking previous node during interaction between layers
 
@@ -189,7 +189,7 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
                         sum += all_data[row].feature_values[previous_node] * weights[layer_num][node_num*2+previous_node] ;
                         printf("(%f * %f) + ",all_data[row].feature_values[previous_node],weights[layer_num][node_num*2+previous_node]);
 
-                        dzdw_array[z_index++] = all_data[row].feature_values[previous_node] ;
+                        dzdw_array[w_index++] = all_data[row].feature_values[previous_node] ;
                         
                     }
                     
@@ -200,8 +200,8 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
                         value = (*functions_pointer[previous_node])(z_keep[previouslayernode_sum + previous_node]) ; //last z
 
                         printf("(%f * %f) + ",value,weights[layer_num][node_num*2+previous_node]);
-                        sum += value * weights[layer_num][node_num*2+previous_node] ;//////////////////////////////////////////////////////
-                        dzdw_array[z_index++] = value ;////////////////////////////////////////////////////////////////
+                        sum += value * weights[layer_num][node_num*2+previous_node] ;
+                        dzdw_array[w_index++] = value ;
                     
                         //printf("using value of node %d",previouslayernode_sum+previous_node);
                     }
@@ -209,7 +209,7 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
 
                 previouslayernode_sum += dimention[layer_num-1] ;
             
-                sum += bias[layer_num][node_num] ; /////////////////////////////////////////////////////////////////////
+                sum += bias[layer_num][node_num] ; 
                 printf("%f\n",bias[layer_num][node_num]);
                 z_keep[node_index] = sum ;
                 sum = (*functions_pointer[layer_num])(sum) ; 
@@ -227,14 +227,14 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
 
         printf("\n-----finished forward propagation--------\n");
 
-        for (int outputnode_num = 0 ; outputnode_num < output_num ; outputnode_num ++) { ///////////////////////////////////////////////
+        for (int outputnode_num = 0 ; outputnode_num < output_num ; outputnode_num ++) { 
             sum = 0 ;
             for (int lasthiddennode_num = 0 ; lasthiddennode_num < dimention[layers-1]; lasthiddennode_num++){
 
                 value = (*functions_pointer[layers-1])(z_keep[node_index-dimention[layers-1]+outputnode_num]); //value of last hidden
 
                 sum += value * weights[layers][outputnode_num*2+lasthiddennode_num]; 
-                dzdw_array[z_index++] = value; ////////////////////////////////////////////////////////////////////////////
+                dzdw_array[w_index++] = value; ////////////////////////////////////////////////////////////////////////////
             }
 
             sum += bias[layers][outputnode_num] ; 
@@ -242,7 +242,7 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
             sum = (*outputfunctions_pointer)(sum);
             *(output+outputnode_num) = sum ;
 
-            printf("node%d's answer : %f\n",outputnode_num,sum);
+            printf("output node%d's answer : %f\n",outputnode_num,sum);
         }
 
         printf("-------finish answering----------\n");
@@ -269,58 +269,82 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
             printf("node's index :%d   loop output number : %d\n",node_index,outputnode_num);
 
             bias_adjust_record[layers][outputnode_num] += (doutputdz)/row_num ;
+            printf("rate of change of bias : %f\n",doutputdz);
 
             z_keep[node_index] = dlossdoutput * doutputdz ;
+            printf("dL/dz : %f\n",dlossdoutput*doutputdz);
 
             node_index--;
         }
 
+        
 
-        printf("dloss/dweight loop\n");
+        printf("\ndloss/dweight loop\n");
         //printf("prepare for backprop -->  0 <= layer <= %d\n",layers-1);
-        for (int layer_num = layers - 1 ; layer_num >= 0 ; layer_num --) { ///////////////////////////////////////
-            printf("layer num for backprop : %d\n",layer_num);
+        for (int layer_num = layers ; layer_num > 0 ; layer_num --) { 
+            printf("--> layer num for backprop : %d\n",layer_num);
 
             //printf("prepare for closer loop --> num : %d\n",dimention[layer_num]-1); 
-            for (int closer_node = dimention[layer_num]-1 ; closer_node >= 0 ; closer_node--) { ///segmentation false//////////////////////////////////////
+            for (int closer_node = dimention[layer_num-1]-1 ; closer_node >= 0 ; closer_node--) { ///segmentation false//////////////////////////////////////
                 printf("colsernode : %d  going to link weight with furter node    ",closer_node);
                 
 
-                printf(" this node's index : %d\n",node_index);
+                printf(" closer node's index : %d\n",node_index);
 
-                if (layer_num == 0) {
-                    printf("this shuld rely on inputs");
-                }
+                if (layer_num == layers) {
+                    for (int furter_node = output_num-1 ; furter_node >= 0 ; furter_node--) {
+                        printf("furter node : %d    at index %d\n",furter_node,node_index+furter_node+1);
 
-                for (int furter_node = dimention[layer_num]-1 ; furter_node >= 0 ; furter_node --) {
-
-                    printf("furter node : %d\n",furter_node);
-
-                    dldlast_z = z_keep[node_index+1] ; 
-
-                    dlast_zdvalue = weights[layer_num][furter_node*2+closer_node] ; //segmentation false//////////////////
-
-                    //dvaluedz = (*dfunction_pointer[layer_num])(z_keep[node_index]);/////////Segmentation fault//////////////////////////////////
-                    //dvaluedz = (*dfunction_pointer[layer_num])(0); //segmentation fault////////
-                    //dvaluedz = (*dfunction_pointer[0])(0); // memory over write ???
-                    dvaluedz = 1 ;
-
-                    //dzdw = dzdw_array[z_index--] ; /////segmentation false////////////////////////////////////////////////////////////////
-                    dzdw = 1 ;
                         
-                    dldz = dldlast_z * dlast_zdvalue * dvaluedz ;
+                    }
+                }else{
+                    for (int furter_node = dimention[layer_num]-1 ; furter_node >= 0 ; furter_node --) {
 
-                    z_keep[closer_node] = dldz ; //segmentation false ///////////////////////
+                        printf("furter node : %d    at index %d\n",furter_node,node_index+furter_node+1);
 
-                    //weight_adjust_record[layer_num][furter_node*2+closer_node] += (dldz * dzdw)/row_num ; //segmentation false
-                    weight_adjust_record[0][0] += (dldz * dzdw)/row_num ;
-                    //bias_adjust_record[layer_num][closer_node] += (dldz)/row_num ; //segmentation false
-                    bias_adjust_record[0][0] += (dldz)/row_num ;
-                    
+                        dldlast_z = z_keep[node_index+1] ; 
+
+                        dlast_zdvalue = weights[layer_num][furter_node*2+closer_node] ; //segmentation false//////////////////
+
+                        //dvaluedz = (*dfunction_pointer[layer_num])(z_keep[node_index]);/////////Segmentation fault//////////////////////////////////
+                        //dvaluedz = (*dfunction_pointer[layer_num])(0); //segmentation fault////////
+                        //dvaluedz = (*dfunction_pointer[0])(0); // memory over write ???
+                        dvaluedz = 1 ;
+
+                        //dzdw = dzdw_array[w_index--] ; /////segmentation false////////////////////////////////////////////////////////////////
+                        dzdw = 1 ;
+                                
+                        dldz = dldlast_z * dlast_zdvalue * dvaluedz ;
+
+                        z_keep[closer_node] = dldz ; //segmentation false ///////////////////////
+
+                        //weight_adjust_record[layer_num][furter_node*2+closer_node] += (dldz * dzdw)/row_num ; //segmentation false
+                        weight_adjust_record[0][0] += (dldz * dzdw)/row_num ;
+                        //bias_adjust_record[layer_num][closer_node] += (dldz)/row_num ; //segmentation false
+                        bias_adjust_record[0][0] += (dldz)/row_num ;
+                            
+                    }
                 }
+                
+                node_index--;
                 
             }
         }
+
+        printf("--> layer num for backprop :0\n");
+
+        for (int closer_node = feature_n-1 ; closer_node >= 0 ; closer_node--) { ///segmentation false//////////////////////////////////////
+            printf("colsernode : %d  going to link weight with furter node\n",closer_node);
+                
+            for (int furter_node = dimention[0]-1 ; furter_node >= 0 ; furter_node--) {
+                printf("furter node : %d\n",furter_node);
+
+                
+            }
+
+        }
+
+        
 
     }
 
