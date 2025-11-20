@@ -148,8 +148,8 @@ float value ; // just keep things around
 
 const int dimention[2] = {1,1}; // set of nodes inputed from user   [3,4,1]
 //float features_train[1][1] = {{1}}; //get from csv's data   
-float weights[3][3] = {{1,1,1},{1},{1}}; //from random
-float bias[3][1] = {{1},{1},{1}}; //from random
+float weights[3][3] = {{2,3,4},{5},{6}}; //from random
+float bias[3][1] = {{7},{8},{9}}; //from random
 
 float sum ; //declare here is fine
 int w_size = 0; //for set z_value-array size 
@@ -212,7 +212,7 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
 
                         
                         sum += all_data[row].feature_values[previous_node] * weights[layer_num][node_num*dimention[layer_num]+previous_node] ;
-                        //printf("(%f * %f) + ",all_data[row].feature_values[previous_node],weights[layer_num][node_num*dimention[layer_num]+previous_node]);
+                        printf("(%f * %f) + ",all_data[row].feature_values[previous_node],weights[layer_num][node_num*dimention[layer_num]+previous_node]);
 
                         //printf("%d +* %d = ",node_num,previous_node);
                         //printf("weight index : %d\n",node_num*dimention[layer_num]+previous_node);
@@ -230,7 +230,7 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
                         //printf("%f\n",z_keep[previouslayernode_sum + previous_node]);
                         // printf("%f",z_keep[0]);
 
-                        //printf("(%f * %f) + ",value,weights[layer_num][node_num*dimention[layer_num]+previous_node]);
+                        printf("(%f * %f) + ",value,weights[layer_num][node_num*dimention[layer_num]+previous_node]);
                         //printf("value : %f    previous_sum : %d    previous_node : %d\n",value,previouslayernode_sum,previous_node);
                         sum += value * weights[layer_num][node_num*dimention[layer_num]+previous_node] ;
                         //dzdw_array[w_index++] = value ;//?
@@ -245,14 +245,14 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
                 //printf("base add : %d     layer : %d\n",dimention[layer_num],layer_num);
                 //printf("bias at layer : %d   node : %d     value : %f\n",layer_num,node_num,bias[layer_num][node_num]);
                 sum += bias[layer_num][node_num] ; 
-                //printf("%f\n",bias[layer_num][node_num]);
+                printf("%f\n",bias[layer_num][node_num]);
                 z_keep[node_index] = sum ;
                 sum = (*functions_pointer[layer_num])(sum) ; 
 
                 //printf("w index as in fp : %d\n",w_index);
                 
 
-                //printf("output in this node : %f at index %d\n",sum,node_index);
+                printf("output in this node : %f at index %d\n",sum,node_index);
 
                 node_index++;
                 
