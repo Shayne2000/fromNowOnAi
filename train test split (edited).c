@@ -49,7 +49,7 @@ void shuffle(int *array ,int size_training){ //array and size of array
 
 void train_test_split(struct data all_data[row_Num], struct dataset *train_set, struct dataset *test_set){
     int index[row_Num];
-    for(int i=0; i<row_Num; i++){ //shuffle data
+    for(int i=0; i<row_Num; i++){ //shuffle index
         index[i] = i;
     }
     shuffle(index, row_Num);
@@ -245,3 +245,4 @@ int main(){
     free(outputLayersBias);
     return 0;
 }
+
