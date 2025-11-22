@@ -8,14 +8,31 @@
 #define Max_node 10
 
 #define Train_Ratio 0.8
-#define row_Num 10 //row_num from part 1
+#define row_Num 5 //row_num from part 1
 #define Train_Size ((int)(row_Num * Train_Ratio))
 #define Test_Size (row_Num - Train_Size)
 
 float init_weights(){
     return((float)rand()) / ((float)RAND_MAX)* 2.0 - 1.0;
 }
-
+//-----------------------------------------
+struct data
+{
+    float feature_value[feature_num];
+    float label_value;
+};
+//-----------------------------------------
+//structure sample data
+struct SampleData {
+    float feature_values[feature_num];
+    float label_value;
+};
+//-----------------------------------------
+struct dataset{
+    struct data rows[row_Num];
+    int size;
+};
+//-----------------------------------------
 void shuffle(int *array ,int size_training){ //array and size of array
     if(size_training > 1){
         for(int i=0; i<size_training; i++){
@@ -30,31 +47,27 @@ void shuffle(int *array ,int size_training){ //array and size of array
     }
 }
 
-void train_test_split(float data[row_Num][feature_num], float labels[row_Num], float train_data[Train_Size][feature_num], float train_labels[Train_Size],
-                      float test_data[Test_Size][feature_num], float test_labels[Test_Size]){
+void train_test_split(struct data all_data[row_Num], struct dataset *train_set, struct dataset *test_set){
     int index[row_Num];
-    for(int i=0; i<row_Num; i++){//shuffle data
+    for(int i=0; i<row_Num; i++){ //shuffle data
         index[i] = i;
     }
     shuffle(index, row_Num);
 
-    for (int i=0; i < Train_Size; i++) { //train data
-        for (int j = 0; j < feature_num; j++) {
-            train_data[i][j] = data[index[i]][j];
-        }
-        train_labels[i] = labels[index[i]];
+    train_set->size = Train_Size;
+    test_set->size = Test_Size;
+
+     for (int i=0; i < Train_Size; i++) { //train data set
+        train_set->rows[i] = all_data[index[i]];
     }
 
-    for (int i=0; i < Test_Size; i++) { //test data
-        for (int j = 0; j < feature_num; j++) {
-            test_data[i][j] = data[index[i + Train_Size]][j];
-        }
-        test_labels[i] = labels[index[i + Train_Size]];
+    for (int i=0; i < Test_Size; i++) { //test data set
+        test_set->rows[i] = all_data[index[i + Train_Size]];
     }
 }
- //-------------------- main -------------------------------------------------------
+ //-------------------- MAIN -------------------------------------------------------
 int main(){
-    srand((unsigned int)time(NULL)); //genarate random seed
+    srand((unsigned int)time(NULL)); //genarated random seed
     int hiddenLayers_num;
 
     printf("Hidden Layer: ");//ask amount of hidden layer
@@ -63,7 +76,8 @@ int main(){
         printf("Invalid hidden layer number. Exiting.\n");
         return -1;  //kill the program if hiddenlayer doesn't provied
     }
-
+    
+    //allocate array to store number of nodes in each hidden layer
     int *HiddenNode_num = malloc(hiddenLayers_num * sizeof(int));  //for dimention
     
     for(int i=0; i<hiddenLayers_num; i++){
@@ -75,24 +89,61 @@ int main(){
             return -1;
         }
     }
-    //------------------------------------------------
-    float data[row_Num][feature_num];
-    float labels [row_Num];
+    struct data all_data[row_Num];
+    //---------------Sample test-------------------------------------------------------------
+    struct SampleData sample_data[5] = {
+    {{25.0, 32000.0}, 3.5},
+    {{30.0, 45000.0}, 4.2},
+    {{22.0, 28000.0}, 3.0},
+    {{40.0, 60000.0}, 4.8},
+    {{35.0, 52000.0}, 4.5}
+    };
 
-    /*for (int i=0; i<row_Num; i++) {
+    for (int i=0; i<row_Num; i++) {
         for (int j=0; j<feature_num; j++) {
-            data[i][j]= all_data[i].feature_values[j]; //Collect data from selected features (from part 1)
+            all_data[i].feature_value[j] = sample_data[i].feature_values[j];
         }
-        labels[i] = all_data[i].label_value; //Collect data from selected labels (from part 1)
+        all_data[i].label_value = sample_data[i].label_value;
     }
-    */
-    //------------------------------------------------
-    float train_data[Train_Size][feature_num];//train test split
+    //---------------------------------------------------------------------------------------
+    //train test split
+    struct dataset train_set, test_set;
+    float train_features[Train_Size][feature_num];
     float train_labels[Train_Size];
-    float test_data[Test_Size][feature_num];
+    float test_features[Test_Size][feature_num];;
     float test_labels[Test_Size];
 
-    train_test_split(data, labels, train_data, train_labels, test_data, test_labels);
+    train_set.size = Train_Size;
+    test_set.size = Test_Size;
+
+    train_test_split(all_data, &train_set, &test_set);
+    
+    //split train/test set
+    for (int i=0; i<train_set.size; i++){ 
+        for (int j=0; j<feature_num; j++){
+            train_features[i][j] = train_set.rows[i].feature_value[j];
+        }
+        train_labels[i] = train_set.rows[i].label_value;
+    }
+
+    for (int i=0; i<test_set.size; i++){
+        for (int j=0; j<feature_num; j++){
+           test_features[i][j] = test_set.rows[i].feature_value[j];
+        }
+        test_labels[i] = test_set.rows[i].label_value;
+    }
+
+    //-------------show train-test features, labels-------------------------
+    printf("Train features:\n");
+    for(int i=0; i<Train_Size; i++){
+        for(int j=0; j<feature_num; j++) printf("%f ", train_features[i][j]);
+        printf(" Label: %f\n", train_labels[i]);
+    }
+    printf("Test features:\n");
+    for(int i=0; i<Test_Size; i++){
+        for(int j=0; j<feature_num; j++) printf("%f ", test_features[i][j]);
+        printf(" Label: %f\n", test_labels[i]);
+    }
     //---------------------------------------------------------------------------------------
     int total_hidden_nodes = 0; //random hidden bias
     for(int i=0; i<hiddenLayers_num; i++)
@@ -194,4 +245,3 @@ int main(){
     free(outputLayersBias);
     return 0;
 }
-
