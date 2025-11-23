@@ -638,11 +638,11 @@ for (int layer_num = 0 ; layer_num < layers ; layer_num++) {
         printf("\nnode : %d\n",next_node);
         if (layer_num == 0) {
             for (int previous_node = 0 ; previous_node < feature_n ; previous_node++) {
-                printf("final weight : %f\n",weights[layer_num][previous_node*2+next_node]);
+                printf("final weight : %f\n",weights[layer_num][previous_node+next_node*dimention[layer_num]]);
             }
         }else {
             for (int previous_node = 0 ; previous_node < dimention[layer_num-1] ; previous_node++) {
-                printf("final weight : %f\n",weights[layer_num][previous_node*2+next_node]);
+                printf("final weight : %f\n",weights[layer_num][previous_node+next_node*dimention[layer_num]]);
             }
         }
         
@@ -656,7 +656,7 @@ for (int next_node = 0 ; next_node < output_num ; next_node++) {
         printf("\nnode : %d\n",next_node);
         // printf("%d",dimention[layers]);
         for (int previous_node = 0 ; previous_node < dimention[layers-1] ; previous_node++) {
-            printf("final weight : %f\n",weights[layers][previous_node*2+next_node]);
+            printf("final weight : %f\n",weights[layers][previous_node+next_node*dimention[layers-1]]);
         }
 
         printf("final bias : %f\n\n\n",bias[layers][next_node]);
