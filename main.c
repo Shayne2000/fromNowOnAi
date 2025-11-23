@@ -219,7 +219,7 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
                         sum += all_data[row].feature_values[previous_node] * weights[layer_num][node_num*dimention[layer_num]+previous_node] ;
                         // printf("(%f * %f) + ",all_data[row].feature_values[previous_node],weights[layer_num][node_num*dimention[layer_num]+previous_node]);
 
-                        //printf("%d +* %d = ",node_num,previous_node);
+                        // printf("%d +* %d = ",node_num,previous_node);
                         //printf("weight index : %d\n",node_num*dimention[layer_num]+previous_node);
                         //dzdw_array[w_index++] = all_data[row].feature_values[previous_node] ;
                         
@@ -228,10 +228,13 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
                 }else{
 
                     for (int previous_node = 0 ; previous_node < dimention[layer_num-1]; previous_node ++ ) {
+
+                        //print(number_of_node,z_keep);
                         
                         value = (*functions_pointer[layer_num-1])(z_keep[previouslayernode_sum + previous_node]) ; //last z
 
                         //printf("weight index : %d\n",node_num*dimention[layer_num]+previous_node);
+                        // printf("z index that use for calculation : %d + %d = %d\n",previouslayernode_sum,previous_node,previouslayernode_sum+previous_node);
                         // printf("%f\n",z_keep[previouslayernode_sum + previous_node]);
                         // printf("%f",z_keep[0]);
 
@@ -242,7 +245,7 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
                     
                         //printf("using value of node %d",previouslayernode_sum+previous_node);
                     }
-                    previouslayernode_sum += dimention[layer_num] ;
+                    
                 }
                 //printf("\n");
 
@@ -264,8 +267,13 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
             }
 
             //printf("finished one layer\n");
+            if (layer_num != 0) {
+                previouslayernode_sum += dimention[layer_num] ;
+            }
+            
 
         }
+        print(number_of_node,z_keep);
 
         printf("\n-----finished forward propagation--------\n");
         //print(number_of_node,z_keep);
