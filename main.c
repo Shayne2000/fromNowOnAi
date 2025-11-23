@@ -25,7 +25,7 @@ int feature_n = 3;                       // Counter for the number of selected f
 
 
 // variables for data storage and indices
-int row_num = 1;      // Total number of rows
+int row_num = 5;      // Total number of rows
 DataRow *all_data = NULL;  // Pointer to hold the array of DataRow (Actual data)
 
 int selected_label_index = -1;                 // 0-based index of the selected label
@@ -88,13 +88,12 @@ int main() {
 
     float feature_samples[5][3] = {  // เปลี่ยนขนาดได้เลือกตามต้องการเลย แต่ต้องสอดคร้องกับ [row_num][feature_num]
         {25.0, 320.0, 1.0}
-        /*
         ,
         {30.0, 450.0, 3.0},
         {22.0, 280.0, 0.5},
         {40.0, 600.0, 10.0},
         {35.0, 520.0, 7.0}
-        */
+
     };
 
     float label_samples[5] = {3.5, 4.2, 3.0, 4.8, 4.5};
@@ -296,7 +295,6 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
                 //printf("weight index : %d\n",w_index);
                 //printf("value * weight = %f * %f \n",value,weights[layers][w_index]);
                 sum += value * weights[layers][outputnode_num*output_num+lasthiddennode_num]; 
-                //dzdw_array[w_index++] = value; ////////////////////////////////////////////////////////////////////////////
                 //printf("%d\n",lasthiddennode_num);
             }
 
@@ -407,9 +405,10 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
                         //z_keep[base+closer_node+1] = dldlast_z ;
                         //printf("szve z at index : %d + %d + 1 = %d\n",base,closer_node,base+closer_node+1);
 
-
-                        weight_adjust_record[layer_num][furter_node*dimention[layer_num]+closer_node] += dldlast_z * dzdw ;
-                        // printf("at (layer,w_index) : %d,%d\n",layer_num,w_index);
+                        // printf("layer : %d",layer_num);
+                        weight_adjust_record[layer_num][furter_node*dimention[layer_num]+closer_node] += (dldlast_z * dzdw)/row_num ;
+                        // printf("at (layer,w_index) : %d,%d\n",layer_num,furter_node*dimention[layer_num]+closer_node);
+                        // printf("w index : %d * %d + %d = %d\n",furter_node,dimention[layer_num],closer_node,furter_node*dimention[layer_num]+closer_node);
 
 
                         //bias_adjust_record[layer_num][closer_node] += dldlast_z ;
