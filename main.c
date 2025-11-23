@@ -284,8 +284,9 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
             for (int lasthiddennode_num = 0 ; lasthiddennode_num < dimention[layers-1]; lasthiddennode_num++){
 
                 //printf("%d %d\n",layers-1,lasthiddennode_num);
-
-                value = (*functions_pointer[layers-1])(z_keep[node_index-dimention[layers-1]+outputnode_num]); //value of last hidden
+                
+                printf("z index that use for calculation : %d - %d + %d = %d\n",node_index,dimention[layers-1],lasthiddennode_num,node_index-dimention[layers-1]+lasthiddennode_num);
+                value = (*functions_pointer[layers-1])(z_keep[node_index-dimention[layers-1]+lasthiddennode_num]); //value of last hidden
 
                 //printf("%d * %d + %d = \n",outputnode_num,output_num,lasthiddennode_num);
                 //printf("weight index : %d\n",outputnode_num*output_num+lasthiddennode_num);
