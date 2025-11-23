@@ -87,11 +87,11 @@ int main() {
 
 
     float feature_samples[5][3] = {  // เปลี่ยนขนาดได้เลือกตามต้องการเลย แต่ต้องสอดคร้องกับ [row_num][feature_num]
-        {25.0, 32000.0, 1.0},
-        {30.0, 45000.0, 3.0},
-        {22.0, 28000.0, 0.5},
-        {40.0, 60000.0, 10.0},
-        {35.0, 52000.0, 7.0}
+        {25.0, 320.0, 1.0},
+        {30.0, 450.0, 3.0},
+        {22.0, 280.0, 0.5},
+        {40.0, 600.0, 10.0},
+        {35.0, 520.0, 7.0}
     };
 
     float label_samples[5] = {3.5, 4.2, 3.0, 4.8, 4.5};
@@ -113,7 +113,7 @@ int adjust_times = 1; // have to get user input first -----> do it later
 float losses[adjust_times] ; //for plot graph
 float loss ;
 
-int layers = 2 ; //get from user input
+int layers = 3 ; //get from user input
 
 float (*functions_pointer[layers])(float) ;
 float (*dfunction_pointer[layers])(float) ;
@@ -123,10 +123,12 @@ float (*outputfunctions_pointer)(float) ;
 float (*doutputfunction_pointer)(float) ;
 
 
-functions_pointer[0] = &test; //loop trought user input
+functions_pointer[0] = &test;
 functions_pointer[1] = &test;
+functions_pointer[2] = &test;
 dfunction_pointer[0] = &test1;
 dfunction_pointer[1] = &test1;
+dfunction_pointer[2] = &test1;
 lfunction_pointer = &testl;
 dlfunction_pointer = &test1;
 outputfunctions_pointer = &test;
@@ -134,7 +136,7 @@ doutputfunction_pointer = &test1;
 
 // printf("%d",functions_pointer[0]());
 
-(*dfunction_pointer)(0) ;
+// (*dfunction_pointer)(0) ;
 ///////////// train test split ///////////
 
 
@@ -146,10 +148,10 @@ float value ; // just keep things around
 
 
 
-const int dimention[2] = {1,1}; // set of nodes inputed from user   [3,4,1]
+const int dimention[3] = {3,3,3}; // set of nodes inputed from user   [3,4,1]
 //float features_train[1][1] = {{1}}; //get from csv's data   
-float weights[3][3] = {{2,3,4},{5},{6}}; //from random
-float bias[3][1] = {{7},{8},{9}}; //from random
+float weights[4][9] = {{0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,0.1},{1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9},{2.0,2.1,2.2,2.3,2.4,2.5,2.6,2.7,2.8},{2.9,3.0,3.1}}; 
+float bias[4][3] = {{3.2,3.3,3.4},{3.5,3.6,3.7},{3.8,3.9,4.0},{4.1}}; //from random
 
 float sum ; //declare here is fine
 int w_size = 0; //for set z_value-array size 
@@ -162,12 +164,14 @@ for (int layer_num = 0 ; layer_num < layers ; layer_num ++ ) {
     if (layer_num == 0) {
         w_size += feature_n*dimention[layer_num] ;
     }else if (layer_num+1 == layers) {
-        w_size += selected_label_index * dimention[layer_num] ;
+        w_size += output_num * dimention[layer_num] ;
     }else {
         w_size += dimention[layer_num-1] * dimention[layer_num] ;
     }
 
+
     number_of_node += dimention[layer_num] ;
+    printf("%d\n",number_of_node);
 
 }
 
@@ -176,6 +180,7 @@ number_of_node += output_num ;
 
 // float dllastzda_array[] ;
 float z_keep [number_of_node] ;
+printf("n : %d",number_of_node);
 
 
 int z_lastlayer_index = -1 ;
@@ -189,8 +194,8 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
 
     ///////printf("loop number : %d\n",adjust_time_count); test memory over flow
 
-    float weight_adjust_record[3][3] = {{0,0,0},{0},{0}}; //fix dimention//////////////////////////////////////////////
-    float bias_adjust_record[3][1] = {{0},{0},{0}}; //fix dimention////////////////////////////////////////////////
+    float weight_adjust_record[4][9] = {{0,0,0,0,0,0,0,0,0},{0,0,0,0,0,0,0,0,0},{0,0,0,0,0,0,0,0,0},{0,0,0}}; //fix dimention//////////////////////////////////////////////
+    float bias_adjust_record[4][3] = {{0,0,0},{0,0,0},{0,0,0},{0}}; //fix dimention////////////////////////////////////////////////
 
     //printf("there is %d rows of data\n",row_num);
     printf("\n");
@@ -212,7 +217,7 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
 
                         
                         sum += all_data[row].feature_values[previous_node] * weights[layer_num][node_num*dimention[layer_num]+previous_node] ;
-                        //printf("(%f * %f) + ",all_data[row].feature_values[previous_node],weights[layer_num][node_num*dimention[layer_num]+previous_node]);
+                        // printf("(%f * %f) + ",all_data[row].feature_values[previous_node],weights[layer_num][node_num*dimention[layer_num]+previous_node]);
 
                         //printf("%d +* %d = ",node_num,previous_node);
                         //printf("weight index : %d\n",node_num*dimention[layer_num]+previous_node);
@@ -227,10 +232,10 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
                         value = (*functions_pointer[layer_num-1])(z_keep[previouslayernode_sum + previous_node]) ; //last z
 
                         //printf("weight index : %d\n",node_num*dimention[layer_num]+previous_node);
-                        //printf("%f\n",z_keep[previouslayernode_sum + previous_node]);
+                        // printf("%f\n",z_keep[previouslayernode_sum + previous_node]);
                         // printf("%f",z_keep[0]);
 
-                        //printf("(%f * %f) + ",value,weights[layer_num][node_num*dimention[layer_num]+previous_node]);
+                        // printf("(%f * %f) + ",value,weights[layer_num][node_num*dimention[layer_num]+previous_node]);
                         //printf("value : %f    previous_sum : %d    previous_node : %d\n",value,previouslayernode_sum,previous_node);
                         sum += value * weights[layer_num][node_num*dimention[layer_num]+previous_node] ;
                         //dzdw_array[w_index++] = value ;//?
@@ -245,14 +250,14 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
                 //printf("base add : %d     layer : %d\n",dimention[layer_num],layer_num);
                 //printf("bias at layer : %d   node : %d     value : %f\n",layer_num,node_num,bias[layer_num][node_num]);
                 sum += bias[layer_num][node_num] ; 
-                //printf("%f\n",bias[layer_num][node_num]);
+                // printf("%f\n",bias[layer_num][node_num]);
                 z_keep[node_index] = sum ;
                 sum = (*functions_pointer[layer_num])(sum) ; 
 
                 //printf("w index as in fp : %d\n",w_index);
                 
 
-                //printf("output in this node : %f at index %d\n",sum,node_index);
+                printf("output in this node : %f at index %d\n",sum,node_index);
 
                 node_index++;
                 
@@ -356,10 +361,10 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
                 
 
                 //printf(" closer node's index : %d\n",node_index);
-
+                dlda = 0;
                 if (layer_num == layers) {
 
-                    dlda = 0;
+                    
 
                     for (int furter_node = output_num-1 ; furter_node >= 0 ; furter_node--) {
                         //printf("furter node : %d    at index %d\n",furter_node,node_index+furter_node+1);
@@ -394,8 +399,8 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
                     //printf("dl/da : ");
                     for (int furter_node = dimention[layer_num]-1 ; furter_node >= 0 ; furter_node--) {
 
-                        dlda += z_keep[base+dimention[layer_num-1]+furter_node] * weights[layer_num+1][furter_node*dimention[layer_num+1]] ; 
-                        //printf("z at : %d and w at (layer,index) : (%d,%d)\n",base+dimention[layer_num-1]+furter_node,layer_num,closer_node*dimention[]);
+                        // dlda += z_keep[base+dimention[layer_num-1]+furter_node] * weights[layer_num+1][furter_node*dimention[layer_num+1]] ; //segmentation false
+                        printf("z at : %d and w at (layer,index) : (%d,%d)\n",base+dimention[layer_num-1]+furter_node,layer_num+1,furter_node*dimention[layer_num+1]);
                         // printf("(%f * %f) + ",z_keep[base+dimention[layer_num-1]+furter_node],weights[layer_num+1][closer_node*dime]);
 
                     }//printf("0\n");
