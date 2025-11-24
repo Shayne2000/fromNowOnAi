@@ -903,7 +903,7 @@ int main(void)
 
 	printf("main program start\n");
 
-	int adjust_times = 1; // have to get user input first -----> do it later
+	int adjust_times = Adjust_time; // have to get user input first -----> do it later
 
 	/////////////// read file, show to user and make user select (feture,row,label) ////////// output --> features,label,features_num ////////
 
@@ -943,6 +943,30 @@ int main(void)
 	for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_count ++) {
 
 		float total_loss_epoch = 0 ;
+		for (int layer = 0; layer < layers+1; layer++)
+			for (int layer = 0; layer < layers+1; layer++) {
+				int size_w;
+				if (layer == 0) {
+					size_w = feature_n * HiddenNode_num[0];
+				} else if (layer == layers) {
+					size_w = HiddenNode_num[layers-1] * output_num;  // ใช้ numOutput / output_num
+				} else {
+					size_w = HiddenNode_num[layer-1] * HiddenNode_num[layer];
+				}
+				memset(weight_adjust_record[layer], 0, size_w * sizeof(float));
+			}
+
+			// reset bias_adjust_record
+			for (int layer = 0; layer < layers+1; layer++) {
+				int size_b;
+				if (layer == layers) {
+					size_b = output_num;          // ไม่ใช่ HiddenNode_num[layers]
+				} else {
+					size_b = HiddenNode_num[layer];
+				}
+				memset(bias_adjust_record[layer], 0, size_b * sizeof(float));
+			}
+
 		for (int row = 0 ; row < train_set.size ; row ++ ) {
 
 			printf("\n             run trought row : %d\n",row);
@@ -1095,7 +1119,7 @@ int main(void)
 
 				
 
-				bias_adjust_record[layers][outputnode_num] += (dlossdoutput*doutputdz)/row_num ;
+				bias_adjust_record[layers][outputnode_num] += (dlossdoutput*doutputdz)/train_set.size ;
 				printf("%d %d",layers,outputnode_num);
 				// bias_adjust_record[0][outputnode_num] += 1 ;
 
@@ -1140,7 +1164,7 @@ int main(void)
 
 							printf("furtest ==> dloss/dw%d : %f\n",closer_node,dldlast_z*dzdw);
 
-							weight_adjust_record[layer_num][furter_node*HiddenNode_num[layer_num-1]+closer_node] += (dldlast_z * dzdw)/row_num ;
+							weight_adjust_record[layer_num][furter_node*HiddenNode_num[layer_num-1]+closer_node] += (dldlast_z * dzdw)/train_set.size ;
 
 
 
@@ -1176,7 +1200,7 @@ int main(void)
 
 							printf("==> dloss/dw%d : %f\n",closer_node,dldlast_z*dzdw);
 
-							weight_adjust_record[layer_num][furter_node*HiddenNode_num[layer_num-1]+closer_node] += (dldlast_z * dzdw)/row_num ;
+							weight_adjust_record[layer_num][furter_node*HiddenNode_num[layer_num-1]+closer_node] += (dldlast_z * dzdw)/train_set.size ;
 
 							// printf("\nfind dlda for furter  z index : %d + %d + %d + 1 = %d\n",base,furter_node,HiddenNode_num[layer_num-1],base+furter_node+HiddenNode_num[layer_num-1]+1);
 							// printf("find dlda for furter  w (layer,index) : %d,(%d + %d * %d = %d)\n\n",layer_num,closer_node,HiddenNode_num[layer_num-1],furter_node,furter_node*HiddenNode_num[layer_num-1]+closer_node);
@@ -1225,11 +1249,11 @@ int main(void)
 					dldlast_z = z_keep[base+furter_node+1] ; 
 					// printf("last z at z index : %d + %d + 1 = %d\n",base,furter_node,base+furter_node+1);
 
-					dzdw = all_data[row].feature_values[closer_node];
+					dzdw = train_set.rows[row].feature_value[closer_node];
 
 					printf("==> dloss/dw%d : %f\n",closer_node,dldlast_z*dzdw);
 
-					weight_adjust_record[0][furter_node*feature_n+closer_node] += (dldlast_z * dzdw)/row_num ;
+					weight_adjust_record[0][furter_node*feature_n+closer_node] += (dldlast_z * dzdw)/train_set.size ;
 
 					// printf("\nfind dlda for furter  z index : %d + %d + %d + 1 = %d\n",base,furter_node,HiddenNode_num[layer_num-1],base+furter_node+HiddenNode_num[layer_num-1]+1);
 					// printf("find dlda for furter  w (layer,index) : %d,(%d + %d * %d = %d)\n\n",layer_num,closer_node,HiddenNode_num[layer_num-1],furter_node,furter_node*HiddenNode_num[layer_num-1]+closer_node);
@@ -1328,7 +1352,8 @@ int main(void)
 
 	printf("end of program....");
 	///////////// output ////////////////////
-	memset(z_keep, 0, sizeof(float) * number_of_node);
+	// memset(z_keep, 0, sizeof(float) * number_of_node);
+	float z_keep2[number_of_node];
 	output[0] = 0;
 
 
@@ -1356,7 +1381,7 @@ int main(void)
 
 						for (int previous_node = 0 ; previous_node < HiddenNode_num[layer_num-1]; previous_node ++ ) {
 
-							value = (*functions_pointer[layer_num-1])(z_keep[previouslayernode_sum + previous_node]) ; //last z
+							value = (*functions_pointer[layer_num-1])(z_keep2[previouslayernode_sum + previous_node]) ; //last z
 
 							sum += value * weights[layer_num][node_num*HiddenNode_num[layer_num-1]+previous_node] ;						
 						}
@@ -1365,7 +1390,7 @@ int main(void)
 					
 					sum += bias[layer_num][node_num] ; 
 					
-					z_keep[node_index] = sum ;
+					z_keep2[node_index] = sum ;
 					
 					sum = (*functions_pointer[layer_num])(sum) ; 
 
@@ -1387,14 +1412,14 @@ int main(void)
 				sum = 0 ;
 				for (int lasthiddennode_num = 0 ; lasthiddennode_num < HiddenNode_num[layers-1]; lasthiddennode_num++){
 
-					value = (*functions_pointer[layers-1])(z_keep[node_index-HiddenNode_num[layers-1]+lasthiddennode_num]); //value of last hidden
+					value = (*functions_pointer[layers-1])(z_keep2[node_index-HiddenNode_num[layers-1]+lasthiddennode_num]); //value of last hidden
 
 					sum += value * weights[layers][outputnode_num*HiddenNode_num[layers-1]+lasthiddennode_num]; 
 
 				}
 
 				sum += bias[layers][outputnode_num] ; 
-				z_keep[node_index+outputnode_num] = sum ;
+				z_keep2[node_index+outputnode_num] = sum ;
 				sum = (*outputfunction_pointer)(sum);
 				*(output+outputnode_num) = sum ;
 
