@@ -1,0 +1,55 @@
+# depslib dependency file v1.0
+1763720736 source:e:\hw\comprog\pbplots.c
+	"pbPlots.h"
+	<pthread.h>
+
+1763720742 e:\hw\comprog\pbplots.h
+	<stdlib.h>
+	<stdbool.h>
+	<math.h>
+	<string.h>
+	<wchar.h>
+	<stdint.h>
+	<stdint.h>
+	<stdlib.h>
+	<stdbool.h>
+
+1763712277 source:e:\hw\comprog\supportlib.c
+	<stdlib.h>
+	<stddef.h>
+	<stdint.h>
+	"supportLib.h"
+
+1763712284 e:\hw\comprog\supportlib.h
+	<stdlib.h>
+	<stdio.h>
+
+1763725374 source:e:\hw\comprog\graph.c
+	"pbPlots.h"
+	"supportLib.h"
+
+1763720736 source:e:\hw\comprog\lib\pbplots.c
+	"pbPlots.h"
+	<pthread.h>
+
+1763720742 e:\hw\comprog\lib\pbplots.h
+	<stdlib.h>
+	<stdbool.h>
+	<math.h>
+	<string.h>
+	<wchar.h>
+	<stdint.h>
+	<stdint.h>
+	<stdlib.h>
+	<stdbool.h>
+
+1763712277 source:e:\hw\comprog\lib\supportlib.c
+	<stdlib.h>
+	<stddef.h>
+	<stdint.h>
+	"supportLib.h"
+
+1763712284 e:\hw\comprog\lib\supportlib.h
+	<stdlib.h>
+	<stdio.h>
+
