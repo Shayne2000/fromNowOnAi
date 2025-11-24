@@ -205,7 +205,6 @@ int read_selected_data()
 // -------------------------------------------  part 2  ------------------------------------------- //
 
 #define numOutput 1
-#define Max_node 10 // thong nee chai tum ah rai kub
 #define Train_Ratio 0.8
 #define MAX_ROWS 1500
 
