@@ -120,13 +120,34 @@ float d_hard_swish(float x) {
 }
 
 // softmax
-void softmax(float arr[], float out[], int n) {
-    float sum = 0;
-    for(int i = 0; i < n; i++)
-        sum += expf(arr[i]);
-    for(int i = 0; i < n; i++)
-        out[i] = expf(arr[i]) / sum;
+// void softmax(float arr[], float out[], int n) {
+//     float sum = 0;
+//     for(int i = 0; i < n; i++)
+//         sum += expf(arr[i]);
+//     for(int i = 0; i < n; i++)
+//         out[i] = expf(arr[i]) / sum;
+// }
+
+float mse(float actual[], float predicted[], int n) {
+    float sum_squared_error = 0.0;
+    for (int i = 0; i < n; i++) {
+        double error = actual[i] - predicted[i];
+
+        sum_squared_error += pow(error, 2);
+    }
+
+    return sum_squared_error / n;
 }
+
+void mse_derivative(double y[], double y_hat[], double grad[], int n) {
+    // derivative: (2/n) * (y_hat[i] - y[i])
+    double factor = 2.0 / n;
+
+    for (int i = 0; i < n; i++) {
+        grad[i] = factor * (y_hat[i] - y[i]);
+    }
+}
+
 
 int main() {
     return 0;

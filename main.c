@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h> // For isspace
+#include <math.h>
 
 
 ///////////////////////////////  declare variables //////////////////////
@@ -34,24 +35,18 @@ int selected_label_index = -1;                 // 0-based index of the selected 
 /////////////////////////////// functions ////////////////////////////////
 int output_num = 1 ;
 
-float test (float a) {
-    
-   // printf("activated a function\n");
-
-    return a;
+float linear(float x) {
+    return x;
+}
+float d_linear(float x) {
+    return 1.0f;
 }
 
-float test1(float a ) {
-    return 1 ;
+float relu(float x) {
+    return (x > 0) ? x : 0;
 }
-
-float testl (float *a) {
-    float sum = 0 ,size;
-    size = output_num;
-    for (int i = 0 ; i < size ; i ++) {
-        sum += *(a+i)/size ;
-    }
-    return sum ;
+float d_relu(float x) {
+    return (x > 0) ? 1.0f : 0.0f;
 }
 
 void print (int number , float list[] ) {
@@ -60,6 +55,27 @@ void print (int number , float list[] ) {
         printf("==> %f\n",list[i]);
     }
     printf("\ntest finished--------------- \n\n");
+}
+float mse(float actual[], float predicted[], int n) {
+    float sum_squared_error = 0.0;
+    for (int i = 0; i < n; i++) {
+        double error = actual[i] - predicted[i];
+
+        sum_squared_error += pow(error, 2);
+    }
+
+    printf("loss : %f",sum_squared_error/n);
+
+    return sum_squared_error / n;
+}
+
+void mse_derivative(double y[], double *y_hat, double *grad, int n) {
+    // derivative: (2/n) * (y_hat[i] - y[i])
+    double factor = 2.0 / n;
+
+    for (int i = 0; i < n; i++) {
+        grad[i] = factor * (y_hat[i] - y[i]);
+    }
 }
 
 #define SELECTION_SIZE 100
@@ -115,26 +131,30 @@ int adjust_times = 1; // have to get user input first -----> do it later
 float losses[adjust_times] ; //for plot graph
 float loss ;
 
-int layers = 3 ; //get from user input
+int layers = 5 ; //get from user input
 
 float (*functions_pointer[layers])(float) ;
 float (*dfunction_pointer[layers])(float) ;
-float (*lfunction_pointer)(float *) ;
-float (*dlfunction_pointer)(float) ;
+float (*lfunction_pointer)(float[],float*,int) ;
+float (*dlfunction_pointer)(float[],float*,float*,int) ;
 float (*outputfunctions_pointer)(float) ;
 float (*doutputfunction_pointer)(float) ;
 
 
-functions_pointer[0] = &test;
-functions_pointer[1] = &test;
-functions_pointer[2] = &test;
-dfunction_pointer[0] = &test1;
-dfunction_pointer[1] = &test1;
-dfunction_pointer[2] = &test1;
-lfunction_pointer = &testl;
-dlfunction_pointer = &test1;
-outputfunctions_pointer = &test;
-doutputfunction_pointer = &test1;
+functions_pointer[0] = &relu;
+functions_pointer[1] = &relu;
+functions_pointer[2] = &relu;
+functions_pointer[3] = &relu;
+functions_pointer[4] = &relu;
+dfunction_pointer[0] = &d_relu;
+dfunction_pointer[1] = &d_relu;
+dfunction_pointer[2] = &d_relu;
+dfunction_pointer[3] = &d_relu;
+dfunction_pointer[4] = &d_relu;
+lfunction_pointer = &mse;
+dlfunction_pointer = &mse_derivative;
+outputfunctions_pointer = &linear;
+doutputfunction_pointer = &d_linear;
 
 // printf("%d",functions_pointer[0]());
 
@@ -150,10 +170,13 @@ float value ; // just keep things around
 
 
 
-const int dimention[3] = {2,1,3}; // set of nodes inputed from user   [3,4,1]
-//float features_train[1][1] = {{1}}; //get from csv's data   
-float weights[4][9] = {{0.2,0.3,0.4,0.5,0.6,0.7},{1.1,1.2},{2.0,2.1,2.2},{2.9,3.0,3.1}}; 
-float bias[4][3] = {{3.2,3.3},{3.5},{3.8,3.9,4.0},{4.1}}; //from random
+const int dimention[5] = {1,2,1,1,1}; // set of nodes inputed from user   [3,4,1]
+
+float weights[6][3] = {{0.2,0.3,0.4},{0.5,0.6},{0.7,1.1},{1.2},{2.0},{2.1}}; 
+float bias[6][2] = {{3.2},{3.3,3.5},{3.8},{3.9},{4.0},{1.7}}; //from random
+
+float weight_adjust_record[6][2] = {{0,0,0},{0,0},{0,0},{0},{0},{0}}; //fix dimention//////////////////////////////////////////////
+float bias_adjust_record[6][2] = {{0},{0,0},{0},{0},{0},{0}}; //fix dimention////////////////////////////////////////////////
 
 float sum ; //declare here is fine
 int w_size = 0; //for set z_value-array size 
@@ -196,8 +219,7 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
 
     ///////printf("loop number : %d\n",adjust_time_count); test memory over flow
 
-    float weight_adjust_record[4][6] = {{0,0,0,0,0,0},{0,0},{0,0,0},{0,0,0}}; //fix dimention//////////////////////////////////////////////
-    float bias_adjust_record[4][3] = {{0,0},{0},{0,0,0},{0}}; //fix dimention////////////////////////////////////////////////
+    
 
     //printf("there is %d rows of data\n",row_num);
     printf("\n");
@@ -310,9 +332,13 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
         // print(number_of_node,z_keep);
 
 
-///--------------------- form here, z_keep will keep dl/dz value  no ----------------------
+    ///--------------------- form here, z_keep will keep dl/dz value  no ----------------------
 
-        losses[adjust_time_count] = (*lfunction_pointer)(output); ////////////////////////////////////////
+        losses[adjust_time_count] = (*lfunction_pointer)(label_samples,output,output_num); ////////////////////////////////////////
+
+        
+
+
 
         float dzdw,dzdz,dzdb,dldlast_z,dvaluedz,dlast_zdvalue,dldz,dlda ;
         printf("\n---------start backpropagation-------------\n");
@@ -321,16 +347,18 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
         //printf("w index start at %d\n\n",--w_index);
         //w_index-- ;
 
-        float dlossdoutput,doutputdz ;
+        float dlossdoutput,doutputdz,*grad ;
+        grad = (float *)malloc(sizeof(float)*output_num);
         // float dldzs[layers+1][];
+
+        (*dlfunction_pointer)(feature_samples,output,grad,output_num);
 
         // dldas[layers] = 0;
 
         //printf("finding dloss/doutputnode loop\n");
         for (int outputnode_num = output_num-1 ; outputnode_num >= 0 ; outputnode_num--) {
 
-            dlossdoutput = (*dlfunction_pointer)(*(output+(int)(outputnode_num)));
-            // printf("dL/doutput : %f\n",dlossdoutput);
+            dlossdoutput = (*grad+outputnode_num);
 
             doutputdz = (*doutputfunction_pointer)(z_keep[node_index]);
 
@@ -441,7 +469,7 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
                 // print(3,bias_adjust_record[layer_num]);
                 
             }
-            if (1) {
+            if (layer_num>=2) {
                 // printf("base - (num of %d)       %d  -->  %d\n",layer_num-1,base,base-dimention[layer_num-2]);
                 base -= dimention[layer_num-2];
             }
@@ -459,7 +487,7 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
             // printf("dl/da : ");
             for (int furter_node = dimention[0]-1 ; furter_node >= 0 ; furter_node--) {
 
-                dldlast_z = z_keep[base+furter_node+0+1] ; 
+                dldlast_z = z_keep[base+furter_node+1] ; 
                 // printf("last z at z index : %d + %d + 1 = %d\n",base,furter_node,base+furter_node+1);
 
                 dzdw = all_data[row].feature_values[closer_node];
@@ -485,7 +513,7 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
             for (int next_node = 0 ; next_node < output_num ; next_node++) {
                 for (int previous_node = 0 ; previous_node < dimention[layer_num-1] ; previous_node++) {
                     weights[layer_num][next_node*dimention[layer_num-1]+previous_node] -= weight_adjust_record[layer_num][previous_node+next_node*dimention[layer_num-1]] * learning_rate ;
-                    printf("add w : %f at (layer,node) : %d,%d\n",weight_adjust_record[layer_num][previous_node+next_node*dimention[layer_num-1]] * learning_rate,layer_num,previous_node+dimention[layer_num]*next_node);
+                    printf("add w : %f at (layer,node) : %d,%d\n",weight_adjust_record[layer_num][previous_node+next_node*dimention[layer_num-1]] * learning_rate,layer_num,previous_node+dimention[layer_num-1]*next_node);
                     // printf("layer : %d\n",layer_num);
                 }
 
@@ -500,13 +528,13 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
                 if (layer_num == 0) {
                     for (int previous_node = 0 ; previous_node < feature_n ; previous_node++) {
                         weights[layer_num][next_node*feature_n+previous_node] -= weight_adjust_record[layer_num][previous_node+next_node*feature_n] * learning_rate ;
-                        printf("add w : %f at (layer,node) : %d,%d\n",weight_adjust_record[layer_num][previous_node+next_node*feature_n] * learning_rate,layer_num,previous_node+dimention[layer_num]*next_node);
+                        printf("add w : %f at (layer,node) : %d,%d\n",weight_adjust_record[layer_num][previous_node+next_node*feature_n] * learning_rate,layer_num,previous_node+feature_n*next_node);
                         // printf("layer : %d\n",layer_num);
                     }
                 }else{
                     for (int previous_node = 0 ; previous_node < dimention[layer_num-1] ; previous_node++) {
                         weights[layer_num][next_node*dimention[layer_num-1]+previous_node] -= weight_adjust_record[layer_num][previous_node+next_node*dimention[layer_num-1]] * learning_rate ;
-                        printf("add w : %f at (layer,node) : %d,%d\n",weight_adjust_record[layer_num][previous_node+next_node*dimention[layer_num-1]] * learning_rate,layer_num,previous_node+dimention[layer_num]*next_node);
+                        printf("add w : %f at (layer,node) : %d,%d\n",weight_adjust_record[layer_num][previous_node+next_node*dimention[layer_num-1]] * learning_rate,layer_num,previous_node+dimention[layer_num-1]*next_node);
                         // printf("layer : %d\n",layer_num);
                     }
                 }
@@ -565,6 +593,8 @@ for (int next_node = 0 ; next_node < output_num ; next_node++) {
 
 printf("end of program....");
 ///////////// output ////////////////////
+
+printf("add w : %f\n",weight_adjust_record[0][2+0*3] * learning_rate);
 
 return 0;
 
