@@ -715,33 +715,33 @@ int main(void)
 
 	struct dataset train_set, test_set;
 
-	float (*train_features)[feature_n] = (float (*)[feature_n])malloc(Train_Size * feature_n * sizeof(float));
-	float *train_labels = (float *)malloc(Train_Size * sizeof(float));
-	float (*test_features)[feature_n] = (float (*)[feature_n])malloc(Test_Size * feature_n * sizeof(float));
-	float *test_labels = (float *)malloc(Test_Size * sizeof(float));
+	// float (*train_features)[feature_n] = (float (*)[feature_n])malloc(Train_Size * feature_n * sizeof(float));
+	// float *train_labels = (float *)malloc(Train_Size * sizeof(float));
+	// float (*test_features)[feature_n] = (float (*)[feature_n])malloc(Test_Size * feature_n * sizeof(float));
+	// float *test_labels = (float *)malloc(Test_Size * sizeof(float));
 
 	train_test_split(all_data_2, row_num, &train_set, &test_set);
 
 	free(all_data_2); // Free
 
 	// split train/test set
-	for (int i = 0; i < train_set.size; i++)
-	{
-		for (int j = 0; j < feature_n; j++)
-		{
-			train_features[i][j] = train_set.rows[i].feature_value[j];
-		}
-		train_labels[i] = train_set.rows[i].label_value;
-	}
+	// for (int i = 0; i < train_set.size; i++)
+	// {
+	// 	for (int j = 0; j < feature_n; j++)
+	// 	{
+	// 		train_features[i][j] = train_set.rows[i].feature_value[j];
+	// 	}
+	// 	train_labels[i] = train_set.rows[i].label_value;
+	// }
 
-	for (int i = 0; i < test_set.size; i++)
-	{
-		for (int j = 0; j < feature_n; j++)
-		{
-			test_features[i][j] = test_set.rows[i].feature_value[j];
-		}
-		test_labels[i] = test_set.rows[i].label_value;
-	}
+	// for (int i = 0; i < test_set.size; i++)
+	// {
+	// 	for (int j = 0; j < feature_n; j++)
+	// 	{
+	// 		test_features[i][j] = test_set.rows[i].feature_value[j];
+	// 	}
+	// 	test_labels[i] = test_set.rows[i].label_value;
+	// }
 
 	printf("##################### test2 ###################\n");
 
@@ -768,18 +768,18 @@ int main(void)
 	// float *hiddenLayersBias = (float *)malloc(total_hidden_nodes * sizeof(float));
 
 	//---------------------------------------------------------------------------------------------------
-	int total_hidden_weight = 0;		// random hidden weight
-	int weight_index[hiddenLayers_num]; // VLA
-	weight_index[0] = 0;
-	int input_size;
-	for (int i = 0; i < hiddenLayers_num; i++)
-	{
-		if (i == 0)
-			input_size = feature_n; // Use feature_n
-		else
-			input_size = HiddenNode_num[i - 1];
-		total_hidden_weight += HiddenNode_num[i] * input_size;
-	}
+	// int total_hidden_weight = 0;		// random hidden weight
+	// int weight_index[hiddenLayers_num]; // VLA
+	// weight_index[0] = 0;
+	// int input_size;
+	// for (int i = 0; i < hiddenLayers_num; i++)
+	// {
+	// 	if (i == 0)
+	// 		input_size = feature_n; // Use feature_n
+	// 	else
+	// 		input_size = HiddenNode_num[i - 1];
+	// 	total_hidden_weight += HiddenNode_num[i] * input_size;
+	// }
 
 	// float **weights = (float *)malloc((total_hidden_weight+HiddenNode_num[hiddenLayers_num - 1]) * sizeof(float));
 
@@ -832,11 +832,12 @@ int main(void)
 			bias_adjust_record[i][j] = 0;
 			printf("random bias at (layer,index) : %d,%d\n",i,j);
 		}
+		int input_size;
 		if (i == 0)
 			input_size = feature_n; // Use feature_n
 		else
 			input_size = HiddenNode_num[i - 1];
-		int index = weight_index[i];
+		// int index = weight_index[i];
 		for (int node = 0; node < HiddenNode_num[i]*input_size; node++)
 		{
 			
@@ -1455,10 +1456,6 @@ int main(void)
 	free(HiddenNode_num);
 	free(weights);
 	free(bias);
-	free(train_features);
-	free(train_labels);
-	free(test_features);
-	free(test_labels);
 
 
 
