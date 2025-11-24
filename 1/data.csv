@@ -1,4 +1,4 @@
-,PassengerId,Survived,Sex,Age,Fare,Pclass_1,Pclass_2,Pclass_3,Family_size,Title_1,Title_2,Title_3,Title_4,Emb_1,Emb_2,Emb_3
+index,PassengerId,Survived,Sex,Age,Fare,Pclass_1,Pclass_2,Pclass_3,Family_size,Title_1,Title_2,Title_3,Title_4,Emb_1,Emb_2,Emb_3
 0,1,0,1,0.275,0.014151057562208049,0,0,1,0.1,1,0,0,0,0,0,1
 1,2,1,0,0.475,0.13913573538264068,1,0,0,0.1,1,0,0,0,1,0,0
 2,3,1,0,0.325,0.015468569817999833,0,0,1,0.0,0,0,0,1,0,0,1
