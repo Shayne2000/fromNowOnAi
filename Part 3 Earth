@@ -56,7 +56,7 @@ const char* activation_names[13] = {
 const char* loss_names[2] = {"MSE","MAE"};
 const char* output_names[3] = {"linear","sigmoid","tanh"};
 
-// ---------------- Set functions using if-else ----------------
+// --------------- ----------------
 void set_hidden_function(int layer, int choice){
     if(choice==0){ functions_pointer[layer]=linear; dfunction_pointer[layer]=dlinear; }
     else if(choice==1){ functions_pointer[layer]=binary_step; dfunction_pointer[layer]=dbinary_step; }
