@@ -732,30 +732,27 @@ int main(void)
 	}
 
 	//-------------show train-test features, labels-------------------------
-	printf("\nTrain features:\n");
-	for (int i = 0; i < Train_Size; i++)
-	{
-		for (int j = 0; j < feature_n; j++)
-			printf("%f ", train_features[i][j]);
-		printf(" Label: %f\n", train_labels[i]);
-	}
-	printf("Test features:\n");
-	for (int i = 0; i < Test_Size; i++)
-	{
-		for (int j = 0; j < feature_n; j++)
-			printf("%f ", test_features[i][j]);
-		printf(" Label: %f\n", test_labels[i]);
-	}
+	// printf("\nTrain features:\n");
+	// for (int i = 0; i < Train_Size; i++)
+	// {
+	// 	for (int j = 0; j < feature_n; j++)
+	// 		printf("%f ", train_features[i][j]);
+	// 	printf(" Label: %f\n", train_labels[i]);
+	// }
+	// printf("Test features:\n");
+	// for (int i = 0; i < Test_Size; i++)
+	// {
+	// 	for (int j = 0; j < feature_n; j++)
+	// 		printf("%f ", test_features[i][j]);
+	// 	printf(" Label: %f\n", test_labels[i]);
+	// }
 	//---------------------------------------------------------------------------------------
 	int total_hidden_nodes = 0; // random hidden bias
 	for (int i = 0; i < hiddenLayers_num; i++)
 		total_hidden_nodes += HiddenNode_num[i];
 
-	float *hiddenLayersBias = (float *)malloc(total_hidden_nodes * sizeof(float));
-	for (int i = 0; i < total_hidden_nodes; i++)
-	{
-		hiddenLayersBias[i] = init_weights();
-	}
+	// float *hiddenLayersBias = (float *)malloc(total_hidden_nodes * sizeof(float));
+
 	//---------------------------------------------------------------------------------------------------
 	int total_hidden_weight = 0;		// random hidden weight
 	int weight_index[hiddenLayers_num]; // VLA
@@ -770,9 +767,37 @@ int main(void)
 		total_hidden_weight += HiddenNode_num[i] * input_size;
 	}
 
-	float *hiddenWeights = (float *)malloc((total_hidden_weight+HiddenNode_num[hiddenLayers_num - 1]) * sizeof(float));
+	// float **weights = (float *)malloc((total_hidden_weight+HiddenNode_num[hiddenLayers_num - 1]) * sizeof(float));
 
+	float **bias;
+	float **weights;
+	// float weight_adjust_record[6][3] = {{0,0,0},{0,0},{0,0},{0},{0},{0}}; //fix HiddenNode_num//////////////////////////////////////////////
+	// float bias_adjust_record[6][2] = {{0},{0,0},{0},{0},{0},{0}};
+	float **weight_adjust_record;
+	float **bias_adjust_record;
 
+	bias = malloc((hiddenLayers_num + 1) * sizeof(float *));
+	bias_adjust_record = malloc((hiddenLayers_num + 1) * sizeof(float *));
+	weight_adjust_record = malloc((hiddenLayers_num + 1) * sizeof(float *));
+
+	for(int i = 0; i < hiddenLayers_num; i++){
+
+		bias[i] = malloc(HiddenNode_num[i] * sizeof(float));
+
+		if(i == 0) weights[i] = malloc((feature_n * HiddenNode_num[i]) * sizeof(float));
+		else weights[i] = malloc((HiddenNode_num[i - 1] * HiddenNode_num[i]) * sizeof(float));
+
+	}
+	bias[hiddenLayers_num] = malloc(sizeof(float));
+	weights[hiddenLayers_num] = malloc(HiddenNode_num[hiddenLayers_num - 1] * sizeof(float));
+
+	for (int i = 0; i < hiddenLayers_num; i++){
+
+		for(int j = 0; j < HiddenNode_num[i]; j++){
+			bias[i][j] = init_weights();
+		}
+		
+	}
 	for (int i = 1; i < hiddenLayers_num; i++)
 	{																		 // determine weight index of each layer
 		int prev_layer_input = (i == 1) ? feature_n : HiddenNode_num[i - 2]; // Use feature_n
@@ -789,7 +814,7 @@ int main(void)
 		{
 			for (int prev = 0; prev < input_size; prev++)
 			{
-				hiddenWeights[index++] = init_weights();
+				weights[i][index++] = init_weights();
 			}
 		}
 	}
@@ -817,24 +842,29 @@ int main(void)
 
 	//---------------show output----------------------------------------------------
 	printf("\nHidden weight\n");
-	printf("[");
-	for (int i = 0; i < hiddenLayers_num; i++)
-	{
-		int input_size;
-		if (i == 0)
-			input_size = feature_n; // Use feature_n
-		else
-			input_size = HiddenNode_num[i - 1];
-		int index = weight_index[i]; // start index of this layer
-		for (int node = 0; node < HiddenNode_num[i]; node++)
-		{
-			for (int prev = 0; prev < input_size; prev++)
-			{
-				printf("%f ", hiddenWeights[index++]);
-			}
-		}
-	}
-	printf("]");
+	// for (int i = 0; i < hiddenLayers_num; i++)
+	// {
+	// 	printf("[");
+
+	// 	int input_size;
+	// 	if (i == 0)
+	// 		input_size = feature_n; // Use feature_n
+	// 	else
+	// 		input_size = HiddenNode_num[i - 1];
+	// 	int index = weight_index[i]; // start index of this layer
+	// 	for (int node = 0; node < HiddenNode_num[i]; node++)
+	// 	{
+			
+	// 		for (int prev = 0; prev < input_size; prev++)
+	// 		{
+				
+	// 			printf("%f ", weights[i][prev]);
+	// 		}
+	// 		printf("]");
+	// 	}
+	// 	printf("]");
+	// }
+	
 	//-------------------------------------------------------------------------------
 	printf("\nOutput Weights:\n");
 	printf("[");
@@ -842,17 +872,7 @@ int main(void)
 		printf("%f ", outputWeights[i]);
 	printf("]");
 	//-------------------------------------------------------------------------------
-	printf("\nHidden Bias\n");
-	printf("[");
-	int bias_index = 0;
-	for (int i = 0; i < hiddenLayers_num; i++)
-	{
-		for (int j = 0; j < HiddenNode_num[i]; j++)
-		{
-			printf("%9.6f ", hiddenLayersBias[bias_index++]);
-		}
-	}
-	printf("]");
+
 	//-------------------------------------------------------------------------------
 	printf("\nOutput Bias\n");
 	printf("[");
@@ -990,8 +1010,8 @@ int main(void)
 
 		///////printf("loop number : %d\n",adjust_time_count); test memory over flow
 
-		float weight_adjust_record[6][2] = {{0,0,0},{0,0},{0,0},{0},{0},{0}}; //fix HiddenNode_num//////////////////////////////////////////////
-		float bias_adjust_record[6][2] = {{0},{0,0},{0},{0},{0},{0}};
+		// float weight_adjust_record[6][3] = {{0,0,0},{0,0},{0,0},{0},{0},{0}}; //fix HiddenNode_num//////////////////////////////////////////////
+		// float bias_adjust_record[6][2] = {{0},{0,0},{0},{0},{0},{0}};
 
 		//printf("there is %d rows of data\n",row_num);
 		printf("\n");
@@ -1384,8 +1404,8 @@ int main(void)
 
 	free(all_data); // Free Part 1
 	free(HiddenNode_num);
-	free(hiddenWeights);
-	free(hiddenLayersBias);
+	free(weights);
+	free(bias);
 	free(outputWeights);
 	free(outputLayersBias);
 	free(train_features);
@@ -1397,3 +1417,4 @@ int main(void)
 
 	return 0;
 }
+
