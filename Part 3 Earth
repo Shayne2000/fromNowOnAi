@@ -14,38 +14,92 @@ float softsign(float x) { return x / (1.0f + fabsf(x)); }
 float elu(float x) { return x >= 0 ? x : expf(x) - 1.0f; }
 float softplus(float x) { return x > 0 ? x + log1pf(expf(-x)) : log1pf(expf(x)); }
 float swish(float x) { return x / (1.0f + expf(-x)); }
-float mish(float x) { float sp = x > 0 ? x + log1pf(expf(-x)) : log1pf(expf(x)); return x * tanhf(sp); }
-float hard_sigmoid(float x) { float r = 0.2f*x + 0.5f; if(r<0) r=0; if(r>1) r=1; return r; }
+
+float mish(float x) { 
+    float sp = x > 0 ? x + log1pf(expf(-x)) : log1pf(expf(x)); 
+    return x * tanhf(sp); 
+}
+
+float hard_sigmoid(float x) { 
+    float r = 0.2f * x + 0.5f; 
+    if(r < 0) r = 0; 
+    if(r > 1) r = 1; 
+    return r; 
+}
 float hard_swish(float x) { return x * hard_sigmoid(x); }
 
 // ---------------- Derivatives ----------------
 float dlinear(float x) { return 1; }
 float dbinary_step(float x) { return 0; }
-float dsigmoid(float x) { float s=sigmoid(x); return s*(1-s); }
-float dtanh(float x) { float t=tanh(x); return 1-t*t; }
-float drelu(float x) { return x>0?1:0; }
-float dleaky_relu(float x) { return x>0?1:0.01f; }
-float dsoftsign(float x) { float denom=1+fabsf(x); return 1/(denom*denom); }
-float delu(float x) { return x>=0?1:expf(x); }
-float dsoftplus(float x) { return 1/(1+expf(-x)); }
-float dswish(float x) { float s=sigmoid(x); return s + x*s*(1-s); }
-float dmish(float x) { return 1; }
-float dhard_sigmoid(float x) { return (x>=-2.5f && x<=2.5f)?0.2f:0; }
-float dhard_swish(float x) { return hard_sigmoid(x) + x*dhard_sigmoid(x); }
+float dsigmoid(float x) { float s = sigmoid(x); return s * (1 - s); }
+float dtanh(float x) { float t = tanh_act(x); return 1 - t * t; }
+float drelu(float x) { return x > 0 ? 1 : 0; }
+float dleaky_relu(float x) { return x > 0 ? 1 : 0.01f; }
+float dsoftsign(float x) { float denom = 1 + fabsf(x); return 1 / (denom * denom); }
+float delu(float x) { return x >= 0 ? 1 : expf(x); }
+float dsoftplus(float x) { return 1 / (1 + expf(-x)); }
+float dswish(float x) { float s = sigmoid(x); return s + x * s * (1 - s); }
 
-// ---------------- Loss functions ----------------
-float MSE(float *y){ return 0; }
-float MAE(float *y){ return 0; }
-float dMSE(float y){ return 0; }
-float dMAE(float y){ return 0; }
+float dmish(float x) { 
+    float sp = (x > 0) ? x + log1pf(expf(-x)) : log1pf(expf(x)); 
+    float tsp = tanhf(sp);
+    float s = 1.0f / (1.0f + expf(-x));
+    return tsp + x * s * (1.0f - tsp * tsp);
+}
 
-// ---------------- Pointer arrays ----------------
+float dhard_sigmoid(float x) { return (x >= -2.5f && x <= 2.5f) ? 0.2f : 0; }
+float dhard_swish(float x) { return hard_sigmoid(x) + x * dhard_sigmoid(x); }
+
+// ---------------- Loss  ----------------
+// MSE
+float mse(float actual[], float predicted[], int n) {
+    float sum_squared_error = 0.0f;
+    for (int i = 0; i < n; i++) {
+        float error = actual[i] - predicted[i];
+        sum_squared_error += error * error;
+    }
+    return sum_squared_error / n;
+}
+
+void mse_derivative(float y[], float y_hat[], float grad[], int n) {
+    float factor = 2.0f / n;
+    for (int i = 0; i < n; i++) {
+        grad[i] = factor * (y_hat[i] - y[i]);
+    }
+}
+
+// MAE
+float mae(float actual[], float predicted[], int n) {
+    float sum_abs_error = 0.0f;
+    for (int i = 0; i < n; i++) {
+        float error = actual[i] - predicted[i];
+        sum_abs_error += fabsf(error);
+    }
+    return sum_abs_error / n;
+}
+
+void mae_derivative(float y[], float y_hat[], float grad[], int n) {
+    float factor = 1.0f / n;
+    for (int i = 0; i < n; i++) {
+        if (y_hat[i] > y[i])
+            grad[i] = factor * 1.0f;
+        else if (y_hat[i] < y[i])
+            grad[i] = factor * -1.0f;
+        else
+            grad[i] = 0.0f;
+    }
+}
+
+// ---------------- Pointer arrays (FIXED signatures) ----------------
 float (*functions_pointer[LAYERS])(float);
 float (*dfunction_pointer[LAYERS])(float);
-float (*lfunction_pointer)(float *);
-float (*dlfunction_pointer)(float);
+
 float (*outputfunction_pointer)(float);
 float (*doutputfunction_pointer)(float);
+
+// Fixed: Loss functions work on Arrays, not single floats
+float (*lfunction_pointer)(float*, float*, int);
+void (*dlfunction_pointer)(float*, float*, float*, int);
 
 // ---------------- Lists ----------------
 const char* activation_names[13] = {
@@ -56,9 +110,9 @@ const char* activation_names[13] = {
 const char* loss_names[2] = {"MSE","MAE"};
 const char* output_names[3] = {"linear","sigmoid","tanh"};
 
-// ---------------- Set functions using if-else ----------------
+// ---------------- Set functions ----------------
 void set_hidden_function(int layer, int choice){
-    choice--; // ปรับให้เริ่มที่ 1
+    choice--;
     if(choice==0){ functions_pointer[layer]=linear; dfunction_pointer[layer]=dlinear; }
     else if(choice==1){ functions_pointer[layer]=binary_step; dfunction_pointer[layer]=dbinary_step; }
     else if(choice==2){ functions_pointer[layer]=sigmoid; dfunction_pointer[layer]=dsigmoid; }
@@ -77,9 +131,10 @@ void set_hidden_function(int layer, int choice){
 
 void set_loss_function(int choice){
     choice--;
-    if(choice==0){ lfunction_pointer=MSE; dlfunction_pointer=dMSE; }
-    else if(choice==1){ lfunction_pointer=MAE; dlfunction_pointer=dMAE; }
-    else{ lfunction_pointer=MSE; dlfunction_pointer=dMSE; }
+    // Fixed assignments without incorrect casting
+    if(choice==0){ lfunction_pointer=mse; dlfunction_pointer=mse_derivative; }
+    else if(choice==1){ lfunction_pointer=mae; dlfunction_pointer=mae_derivative; }
+    else{ lfunction_pointer=mse; dlfunction_pointer=mse_derivative; }
 }
 
 void set_output_function(int choice){
@@ -116,78 +171,5 @@ int main(){
     scanf("%d",&choice);
     set_output_function(choice);
 
-    // test print
-    float x=0.5;
-    for(int i=0;i<LAYERS;i++)
-        printf("Hidden %d: %f (derivative %f)\n",i+1,functions_pointer[i](x),dfunction_pointer[i](x));
-
-    printf("Output function: %f (derivative %f)\n",outputfunction_pointer(x),doutputfunction_pointer(x));
-
-<<<<<<< HEAD
-// mish
-float mish(float x) {
-    return x * my_tanh(softplus(x));
-}
-float d_mish(float x) {
-    float sp = softplus(x);
-    float t = my_tanh(sp);
-    float s = sigmoid(x);
-    return t + x * (1.0f - t * t) * s;
-}
-
-// hard-sigmoid
-float hard_sigmoid(float x) {
-    float r = (0.2f * x) + 0.5f;
-    if (r < 0) r = 0;
-    if (r > 1) r = 1;
-    return r;
-}
-float d_hard_sigmoid(float x) {
-    return (x > -2.5f && x < 2.5f) ? 0.2f : 0.0f;
-}
-
-// hard-swish
-float hard_swish(float x) {
-    return x * hard_sigmoid(x);
-}
-float d_hard_swish(float x) {
-    float hs = hard_sigmoid(x);
-    float d_hs = d_hard_sigmoid(x);
-    return (hs + x * d_hs);
-}
-
-// softmax
-// void softmax(float arr[], float out[], int n) {
-//     float sum = 0;
-//     for(int i = 0; i < n; i++)
-//         sum += expf(arr[i]);
-//     for(int i = 0; i < n; i++)
-//         out[i] = expf(arr[i]) / sum;
-// }
-
-float mse(float actual[], float predicted[], int n) {
-    float sum_squared_error = 0.0;
-    for (int i = 0; i < n; i++) {
-        double error = actual[i] - predicted[i];
-
-        sum_squared_error += pow(error, 2);
-    }
-
-    return sum_squared_error / n;
-}
-
-void mse_derivative(double y[], double y_hat[], double grad[], int n) {
-    // derivative: (2/n) * (y_hat[i] - y[i])
-    double factor = 2.0 / n;
-
-    for (int i = 0; i < n; i++) {
-        grad[i] = factor * (y_hat[i] - y[i]);
-    }
-}
-
-
-int main() {
-=======
->>>>>>> f606be441c50977d8afbf8526e5c69e828b7b778
     return 0;
 }
