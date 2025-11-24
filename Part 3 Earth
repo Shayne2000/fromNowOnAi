@@ -2,105 +2,112 @@
 #include <math.h>
 
 // ---------------- Activation functions ----------------
+float linear(float x) { return x; }
+float sigmoid(float x) { return 1.0f / (1.0f + expf(-x)); }
+float relu(float x) { return (x>0)? x:0; }
+float leaky_relu(float x) { return (x>0)? x:0.01f*x; }
+float tanh_act(float x) { return tanhf(x); }
+float softsign(float x) { return x / (1.0f + fabsf(x)); }
+float elu(float x) { return (x>=0)? x:expf(x)-1.0f; }
+float softplus(float x) { return log1pf(expf(x)); }
+float swish(float x) { return x * sigmoid(x); }
+float mish(float x) { return x * tanhf(softplus(x)); }
+float binary_step(float x) { return (x>=0)?1.0f:0.0f; }
+float hard_sigmoid(float x) { float r=0.2f*x+0.5f; if(r<0) r=0; if(r>1) r=1; return r; }
+float hard_swish(float x) { return x * hard_sigmoid(x); }
 
-// linear: ฟังก์ชันเส้นตรง (identity)
-float linear(float x) {
-    return x;
-}
+// ---------------- Derivatives ----------------
+float d_linear(float x) { return 1; }
+float d_sigmoid(float x) { float s=sigmoid(x); return s*(1-s); }
+float d_relu(float x) { return (x>0)?1:0; }
+float d_leaky_relu(float x) { return (x>0)?1:0.01f; }
+float d_tanh(float x) { float t=tanhf(x); return 1-t*t; }
+float d_softsign(float x) { float denom=1+fabsf(x); return 1/(denom*denom); }
+float d_elu(float x) { return (x>=0)?1:expf(x); }
+float d_softplus(float x) { return 1/(1+expf(-x)); }
+float d_swish(float x) { float s=sigmoid(x); return s + x*s*(1-s); }
+float d_mish(float x) { float sp=log1pf(expf(x)); float t=tanhf(sp); float ds=1/(1+expf(-x)); return t + x*ds*(1-t*t); }
+float d_binary_step(float x) { return 0; }
+float d_hard_sigmoid(float x) { return (x>-2.5f && x<2.5f)?0.2f:0; }
+float d_hard_swish(float x) { float r=(x>-2.5f && x<2.5f)?0.2f:0; return r*x + hard_sigmoid(x); }
 
-// binary_step: ฟังก์ชันขั้นบันได
-float binary_step(float x) {
-    if (x >= 0.0f) return 1.0f;
-    else return 0.0f;
-}
-
-// sigmoid: ฟังก์ชัน Sigmoid
-float sigmoid(float x) {
-    return 1.0f / (1.0f + expf(-x));
-}
-
-// tanh: ฟังก์ชัน Hyperbolic tangent
-float tanh_act(float x) {
-    return tanhf(x);
-}
-
-// relu: ฟังก์ชัน ReLU
-float relu(float x) {
-    if (x > 0.0f) return x;
-    else return 0.0f;
-}
-
-// leaky_relu: ReLU แบบมี slope เล็กเมื่อ x < 0
-float leaky_relu(float x) {
-    if (x > 0.0f) return x;
-    else return 0.01f * x;
-}
-
-// softsign: ฟังก์ชัน Softsign
-float softsign(float x) {
-    return x / (1.0f + fabsf(x));
-}
-
-// elu: Exponential Linear Unit
-float elu(float x) {
-    if (x >= 0.0f) return x;
-    else return expf(x) - 1.0f;
-}
-
-// softplus: ฟังก์ชัน Softplus
-float softplus(float x) {
-    if (x > 0.0f) return x + log1pf(expf(-x));
-    else return log1pf(expf(x));
-}
-
-// swish: ฟังก์ชัน Swish
-float swish(float x) {
-    return x / (1.0f + expf(-x)); // x*sigmoid(x)
-}
-
-// mish: ฟังก์ชัน Mish
-float mish(float x) {
-    float sp;
-    if (x > 0.0f) sp = x + log1pf(expf(-x));
-    else sp = log1pf(expf(x));
-    return x * tanhf(sp);
-}
-
-// hard_sigmoid: ฟังก์ชัน Hard Sigmoid
-float hard_sigmoid(float x) {
-    float r = 0.2f * x + 0.5f;
-    if (r < 0.0f) r = 0.0f;
-    if (r > 1.0f) r = 1.0f;
-    return r;
-}
-
-// hard_swish: ฟังก์ชัน Hard Swish
-float hard_swish(float x) {
-    return x * hard_sigmoid(x);
-}
-
-// ---------------- List ของ Activation functions ----------------
-const char* activation_names[13] = {
-    "linear",        // ฟังก์ชันเส้นตรง
-    "binary_step",   // ฟังก์ชันขั้นบันได
-    "sigmoid",       // ฟังก์ชัน Sigmoid
-    "tanh",          // ฟังก์ชัน Hyperbolic tangent
-    "relu",          // ฟังก์ชัน ReLU
-    "leaky_relu",    // ReLU แบบ slope เล็กเมื่อ x < 0
-    "softsign",      // ฟังก์ชัน Softsign
-    "elu",           // Exponential Linear Unit
-    "softplus",      // ฟังก์ชัน Softplus
-    "swish",         // ฟังก์ชัน Swish
-    "mish",          // ฟังก์ชัน Mish
-    "hard_sigmoid",  // ฟังก์ชัน Hard Sigmoid
-    "hard_swish"     // ฟังก์ชัน Hard Swish
+// ---------------- List of functions ----------------
+#define NUM_ACT 13
+const char* activation_names[NUM_ACT] = {
+    "linear","sigmoid","relu","leaky_relu","tanh",
+    "softsign","elu","softplus","swish","mish",
+    "binary_step","hard_sigmoid","hard_swish"
 };
 
-// ---------------- Main ----------------
+float (*activations[NUM_ACT])(float) = {
+    linear,sigmoid,relu,leaky_relu,tanh_act,softsign,elu,
+    softplus,swish,mish,binary_step,hard_sigmoid,hard_swish
+};
+
+float (*derivatives[NUM_ACT])(float) = {
+    d_linear,d_sigmoid,d_relu,d_leaky_relu,d_tanh,d_softsign,d_elu,
+    d_softplus,d_swish,d_mish,d_binary_step,d_hard_sigmoid,d_hard_swish
+};
+
 int main() {
-    printf("List of activation functions:\n");
-    for(int i = 0; i < 13; i++) {
-        printf("%2d) %s\n", i+1, activation_names[i]);
+    int n;
+    printf("How many activation functions do you want to choose? ");
+    scanf("%d", &n);
+
+    if(n <= 0){
+        printf("Invalid number!\n");
+        return 1;
     }
+
+    // pointer array สำหรับเก็บ activation function ของแต่ละ choice
+    float* chosen_activation[n];
+    const char* chosen_name[n];
+
+    int choice;
+    for(int i=0; i<n; i++){
+        // ---------------- Show list ----------------
+        printf("\nChoose activation function #%d:\n", i+1);
+        for(int j=0; j<NUM_ACT; j++){
+            printf("%2d) %s\n", j+1, activation_names[j]);
+        }
+
+        printf("Enter number: ");
+        scanf("%d", &choice);
+
+        if(choice >=1 && choice <= NUM_ACT){
+            int index = choice-1;
+            chosen_activation[i] = activations[index];
+            chosen_name[i] = activation_names[index];
+            printf("You chose: %s\n", chosen_name[i]);
+        } else {
+            printf("Invalid choice! Try again.\n");
+            i--; // เลือกผิดให้วนรอบนี้ใหม่
+        }
+    }
+
+    // ---------------- Show all choices ----------------
+    printf("\nAll chosen activation functions:\n");
+    for(int i=0;i<n;i++){
+        printf("Choice %d: %s\n", i+1, chosen_name[i]);
+    }
+
+    // ---------------- Example usage ----------------
+    float x = 0.5f;
+    printf("\nExample activation outputs for x=%.2f:\n", x);
+    for(int i=0;i<n;i++){
+        int index = 0;
+        // หา index ของ activation เพื่อเรียก derivative
+        for(int j=0;j<NUM_ACT;j++){
+            if(chosen_activation[i] == activations[j]){
+                index = j;
+                break;
+            }
+        }
+        printf("%d) %s: %.4f (derivative: %.4f)\n",
+            i+1, chosen_name[i],
+            chosen_activation[i](x),
+            derivatives[index](x));
+    }
+
     return 0;
 }
