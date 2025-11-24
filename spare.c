@@ -264,6 +264,7 @@ void train_test_split(DataRow all_data_2[], int total_rows, struct dataset *trai
 		for(int j=0; j<feature_n; j++){
             train_set->rows[i].feature_value[j] = all_data_2[index[i]].feature_values[j];
         }
+		train_set->rows[i].label_value = all_data_2[index[i]].label_value;
 	}
 
 	for (int i = 0; i < Test_Size; i++)
@@ -1057,7 +1058,7 @@ int main(void)
 			float label_arr[1];
 			label_arr[0] = train_set.rows[row].label_value;
 
-			total_loss_epoch = lfunction_pointer(label_arr, output, 1);
+			total_loss_epoch += lfunction_pointer(label_arr, output, 1);
 			
 
 
@@ -1327,8 +1328,89 @@ int main(void)
 
 	printf("end of program....");
 	///////////// output ////////////////////
+	memset(z_keep, 0, sizeof(float) * number_of_node);
+	output[0] = 0;
 
-	
+
+	float total_loss_epoch = 0 ;
+		for (int row = 0 ; row < test_set.size ; row ++ ) {
+
+			printf("\n             run trought row : %d\n",row);
+
+
+			int node_index = 0; // using with activationfunction_output
+			int previouslayernode_sum = 0 ;//for tracking previous node during interaction between layers
+
+			for (int layer_num = 0 ; layer_num < layers ; layer_num ++ ) {
+
+				for (int node_num = 0 ; node_num < HiddenNode_num[layer_num] ; node_num++){
+					sum = 0;
+					if (layer_num == 0) {
+						for (int previous_node = 0 ; previous_node < feature_n ; previous_node++ ) {
+			
+							sum += test_set.rows[row].feature_value[previous_node] * weights[layer_num][node_num*feature_n+previous_node];
+
+						}
+						
+					}else{
+
+						for (int previous_node = 0 ; previous_node < HiddenNode_num[layer_num-1]; previous_node ++ ) {
+
+							value = (*functions_pointer[layer_num-1])(z_keep[previouslayernode_sum + previous_node]) ; //last z
+
+							sum += value * weights[layer_num][node_num*HiddenNode_num[layer_num-1]+previous_node] ;						
+						}
+						
+					}
+					
+					sum += bias[layer_num][node_num] ; 
+					
+					z_keep[node_index] = sum ;
+					
+					sum = (*functions_pointer[layer_num])(sum) ; 
+
+					node_index++;
+					
+				}
+
+				if (layer_num != 0) {
+					previouslayernode_sum += HiddenNode_num[layer_num-1] ;
+				}
+				
+
+			}
+
+			printf("\n-----finished forward propagation--------\n");
+
+			for (int outputnode_num = 0 ; outputnode_num < output_num ; outputnode_num ++) { 
+				
+				sum = 0 ;
+				for (int lasthiddennode_num = 0 ; lasthiddennode_num < HiddenNode_num[layers-1]; lasthiddennode_num++){
+
+					value = (*functions_pointer[layers-1])(z_keep[node_index-HiddenNode_num[layers-1]+lasthiddennode_num]); //value of last hidden
+
+					sum += value * weights[layers][outputnode_num*HiddenNode_num[layers-1]+lasthiddennode_num]; 
+
+				}
+
+				sum += bias[layers][outputnode_num] ; 
+				z_keep[node_index+outputnode_num] = sum ;
+				sum = (*outputfunction_pointer)(sum);
+				*(output+outputnode_num) = sum ;
+
+				printf("output node%d's answer : %f\n",outputnode_num,sum);
+			}
+
+		printf("-------finish answering----------\n");
+
+		float label_arr[1];
+		label_arr[0] = test_set.rows[row].label_value;
+
+		total_loss_epoch += lfunction_pointer(label_arr, output, 1);
+
+		}
+
+		printf("evaluate model   loss : %f\n",total_loss_epoch/test_set.size);
 
 	
 
