@@ -743,7 +743,7 @@ int main(void)
 	// 	test_labels[i] = test_set.rows[i].label_value;
 	// }
 
-	printf("##################### test2 ###################\n");
+	// printf("##################### test2 ###################\n");
 
 	//-------------show train-test features, labels-------------------------
 	// printf("\nTrain features:\n");
@@ -783,7 +783,7 @@ int main(void)
 
 	// float **weights = (float *)malloc((total_hidden_weight+HiddenNode_num[hiddenLayers_num - 1]) * sizeof(float));
 
-	printf("##################### test3 ###################\n");
+	// printf("##################### test3 ###################\n");
 	float **bias;
 	float **weights;
 	// float weight_adjust_record[6][3] = {{0,0,0},{0,0},{0,0},{0},{0},{0}}; //fix HiddenNode_num//////////////////////////////////////////////
@@ -791,7 +791,7 @@ int main(void)
 	float **weight_adjust_record;
 	float **bias_adjust_record;
 
-	printf("layers+1 : %d\n",hiddenLayers_num+1);
+	// printf("layers+1 : %d\n",hiddenLayers_num+1);
 
 	bias = (float **)malloc((hiddenLayers_num + 1) * sizeof(float *));
 	bias_adjust_record = (float **)malloc((hiddenLayers_num + 1) * sizeof(float *));
@@ -824,13 +824,13 @@ int main(void)
 	bias_adjust_record[hiddenLayers_num]= (float *)malloc(numOutput*sizeof(float));
 	weights[hiddenLayers_num] = (float *)malloc(HiddenNode_num[hiddenLayers_num - 1] * numOutput * sizeof(float));
 	weight_adjust_record[hiddenLayers_num] = malloc(HiddenNode_num[hiddenLayers_num - 1] * numOutput * sizeof(float));
-	printf("##################### test4 ###################\n");
+	// printf("##################### test4 ###################\n");
 	for (int i = 0; i < hiddenLayers_num; i++){
 
 		for(int j = 0; j < HiddenNode_num[i]; j++){
 			bias[i][j] = init_weights();
 			bias_adjust_record[i][j] = 0;
-			printf("random bias at (layer,index) : %d,%d\n",i,j);
+			// printf("random bias at (layer,index) : %d,%d\n",i,j);
 		}
 		int input_size;
 		if (i == 0)
@@ -841,7 +841,7 @@ int main(void)
 		for (int node = 0; node < HiddenNode_num[i]*input_size; node++)
 		{
 			
-			printf("weight at (layer, index) : %d, %d", i, node);
+			// printf("weight at (layer, index) : %d, %d", i, node);
 			weights[i][node] = init_weights();
 			weight_adjust_record[i][node] = 0;
 			
@@ -902,7 +902,7 @@ int main(void)
 	int output_num = numOutput ;
 
 
-	printf("main program start\n");
+	// printf("main program start\n");
 
 	int adjust_times = Adjust_time; // have to get user input first -----> do it later
 
@@ -931,7 +931,7 @@ int main(void)
 
 	// float dllastzda_array[] ;
 	float z_keep [number_of_node] ;
-	printf("n : %d",number_of_node);
+	// printf("n : %d",number_of_node);
 
 
 	int z_lastlayer_index = -1 ;
@@ -970,7 +970,7 @@ int main(void)
 
 		for (int row = 0 ; row < train_set.size ; row ++ ) {
 
-			printf("\n             run trought row : %d\n",row);
+			// printf("\n             run trought row : %d\n",row);
 
 
 			int node_index = 0; // using with activationfunction_output
@@ -1020,14 +1020,14 @@ int main(void)
 					//printf("base add : %d     layer : %d\n",HiddenNode_num[layer_num],layer_num);
 					//printf("bias at layer : %d   node : %d     value : %f\n",layer_num,node_num,bias[layer_num][node_num]);
 					sum += bias[layer_num][node_num] ; 
-					printf("%f\n",bias[layer_num][node_num]);
+					// printf("%f\n",bias[layer_num][node_num]);
 					z_keep[node_index] = sum ;
 					// printf("output in this node : %f at index %d\n",sum,node_index);
 					sum = (*functions_pointer[layer_num])(sum) ; 
 
 					//printf("w index as in fp : %d\n",w_index);
 					
-					printf("after function : %f at index %d\n",sum,node_index);
+					// printf("after function : %f at index %d\n",sum,node_index);
 					
 
 					node_index++;
@@ -1044,7 +1044,7 @@ int main(void)
 			}
 			// print(number_of_node,z_keep);
 
-			printf("\n-----finished forward propagation--------\n");
+			// printf("\n-----finished forward propagation--------\n");
 			print(number_of_node,z_keep);
 
 			for (int outputnode_num = 0 ; outputnode_num < output_num ; outputnode_num ++) { 
@@ -1070,10 +1070,10 @@ int main(void)
 				sum = (*outputfunction_pointer)(sum);
 				*(output+outputnode_num) = sum ;
 
-				printf("output node%d's answer : %f\n",outputnode_num,sum);
+				// printf("output node%d's answer : %f\n",outputnode_num,sum);
 			}
 
-			printf("-------finish answering----------\n");
+			// printf("-------finish answering----------\n");
 			// print(number_of_node,z_keep);
 
 
@@ -1089,7 +1089,7 @@ int main(void)
 
 
 			float dzdw,dzdz,dzdb,dldlast_z,dvaluedz,dlast_zdvalue,dldz,dlda ;
-			printf("\n---------start backpropagation-------------\n");
+			// printf("\n---------start backpropagation-------------\n");
 
 			node_index = number_of_node-1;// using with z_keep
 			//printf("w index start at %d\n\n",--w_index);
@@ -1111,20 +1111,20 @@ int main(void)
 
 			//printf("finding dloss/doutputnode loop\n");
 			for (int outputnode_num = output_num-1 ; outputnode_num >= 0 ; outputnode_num--) {
-				printf("========== you shall pass =========================\n");
+				// printf("========== you shall pass =========================\n");
 
 				//dlossdoutput = (*grad+outputnode_num);
 
 				doutputdz = (*doutputfunction_pointer)(z_keep[node_index]);
-				printf("========== you shall pass 2 =========================\n");
+				// printf("========== you shall pass 2 =========================\n");
 
 				
 
 				bias_adjust_record[layers][outputnode_num] += (dlossdoutput*doutputdz)/train_set.size ;
-				printf("%d %d",layers,outputnode_num);
+				// printf("%d %d",layers,outputnode_num);
 				// bias_adjust_record[0][outputnode_num] += 1 ;
 
-				printf("furtest ==> dloss / dbias : %f\n",dlossdoutput);
+				// printf("furtest ==> dloss / dbias : %f\n",dlossdoutput);
 
 				z_keep[number_of_node-output_num+outputnode_num] = dlossdoutput * doutputdz ;
 
@@ -1144,7 +1144,7 @@ int main(void)
 			//printf("\ndloss/dweight loop\n");
 			//printf("prepare for backprop -->  0 <= layer <= %d\n",layers-1);
 			for (int layer_num = layers ; layer_num > 0 ; layer_num --) { 
-				printf("\n--> layer num for backprop : %d\n\n",layer_num);
+				// printf("\n--> layer num for backprop : %d\n\n",layer_num);
 
 
 
@@ -1163,7 +1163,7 @@ int main(void)
 
 							dzdw = (*functions_pointer[layer_num-1])(z_keep[base+closer_node+1]);
 
-							printf("furtest ==> dloss/dw%d : %f\n",closer_node,dldlast_z*dzdw);
+							// printf("furtest ==> dloss/dw%d : %f\n",closer_node,dldlast_z*dzdw);
 
 							weight_adjust_record[layer_num][furter_node*HiddenNode_num[layer_num-1]+closer_node] += (dldlast_z * dzdw)/train_set.size ;
 
@@ -1182,7 +1182,7 @@ int main(void)
 						// printf("dlda : %f\n",dlda);
 						dldz = dlda * dvaluedz;
 						bias_adjust_record[layer_num-1][closer_node] = dldz;
-						printf("==> dloss/ dbias : %f\n",dldz);
+						// printf("==> dloss/ dbias : %f\n",dldz);
 
 						// printf("z index to keep dldz in closer node : %d + %d + 1 = %d    value : %f\n\n",base,closer_node,base+closer_node+1,dldz);
 						z_keep[base+closer_node+1] = dldz;
@@ -1199,7 +1199,7 @@ int main(void)
 
 							dzdw = (*functions_pointer[layer_num-1])(z_keep[base+closer_node+1]);
 
-							printf("==> dloss/dw%d : %f\n",closer_node,dldlast_z*dzdw);
+							// printf("==> dloss/dw%d : %f\n",closer_node,dldlast_z*dzdw);
 
 							weight_adjust_record[layer_num][furter_node*HiddenNode_num[layer_num-1]+closer_node] += (dldlast_z * dzdw)/train_set.size ;
 
@@ -1220,7 +1220,7 @@ int main(void)
 						// print(number_of_node,z_keep);
 						bias_adjust_record[layer_num-1][closer_node] = dldz ;
 
-						printf("==> dloss/ dbias : %f\n",dldz);
+						// printf("==> dloss/ dbias : %f\n",dldz);
 						
 					
 						node_index--;
@@ -1236,7 +1236,7 @@ int main(void)
 				
 			}
 			// print(number_of_node,z_keep);
-			printf("\n--> layer num for backprop :0\n\n");
+			// printf("\n--> layer num for backprop :0\n\n");
 			// printf("base variable in final phase : %d\n",base);
 
 			
@@ -1252,7 +1252,7 @@ int main(void)
 
 					dzdw = train_set.rows[row].feature_value[closer_node];
 
-					printf("==> dloss/dw%d : %f\n",closer_node,dldlast_z*dzdw);
+					// printf("==> dloss/dw%d : %f\n",closer_node,dldlast_z*dzdw);
 
 					weight_adjust_record[0][furter_node*feature_n+closer_node] += (dldlast_z * dzdw)/train_set.size ;
 
@@ -1267,7 +1267,7 @@ int main(void)
 
 		losses[adjust_time_count] = total_loss_epoch/train_set.size;
 
-		printf("\n######## change weight-bias value ##############\n") ;
+		// printf("\n######## change weight-bias value ##############\n") ;
 
 		for (int layer_num = 0 ; layer_num < layers+1 ; layer_num++) { 
 			// printf("layer : %d\n",layer_num);
@@ -1275,12 +1275,12 @@ int main(void)
 				for (int next_node = 0 ; next_node < output_num ; next_node++) {
 					for (int previous_node = 0 ; previous_node < HiddenNode_num[layer_num-1] ; previous_node++) {
 						weights[layer_num][next_node*HiddenNode_num[layer_num-1]+previous_node] -= weight_adjust_record[layer_num][previous_node+next_node*HiddenNode_num[layer_num-1]] * learning_rate ;
-						printf("add w : %f at (layer,node) : %d,%d\n",weight_adjust_record[layer_num][previous_node+next_node*HiddenNode_num[layer_num-1]] * learning_rate,layer_num,previous_node+HiddenNode_num[layer_num-1]*next_node);
+						// printf("add w : %f at (layer,node) : %d,%d\n",weight_adjust_record[layer_num][previous_node+next_node*HiddenNode_num[layer_num-1]] * learning_rate,layer_num,previous_node+HiddenNode_num[layer_num-1]*next_node);
 						// printf("layer : %d\n",layer_num);
 					}
 
 					bias[layer_num][next_node] -= bias_adjust_record[layer_num][next_node] * learning_rate ;
-					printf("add b : %f at (layer,node) : %d,%d\n\n",bias_adjust_record[layer_num][next_node] * learning_rate,layer_num,next_node);
+					// printf("add b : %f at (layer,node) : %d,%d\n\n",bias_adjust_record[layer_num][next_node] * learning_rate,layer_num,next_node);
 					// printf("layer : %d\n",layer_num);
 
 				}
@@ -1290,19 +1290,19 @@ int main(void)
 					if (layer_num == 0) {
 						for (int previous_node = 0 ; previous_node < feature_n ; previous_node++) {
 							weights[layer_num][next_node*feature_n+previous_node] -= weight_adjust_record[layer_num][previous_node+next_node*feature_n] * learning_rate ;
-							printf("add w : %f at (layer,node) : %d,%d\n",weight_adjust_record[layer_num][previous_node+next_node*feature_n] * learning_rate,layer_num,previous_node+feature_n*next_node);
+							// printf("add w : %f at (layer,node) : %d,%d\n",weight_adjust_record[layer_num][previous_node+next_node*feature_n] * learning_rate,layer_num,previous_node+feature_n*next_node);
 							// printf("layer : %d\n",layer_num);
 						}
 					}else{
 						for (int previous_node = 0 ; previous_node < HiddenNode_num[layer_num-1] ; previous_node++) {
 							weights[layer_num][next_node*HiddenNode_num[layer_num-1]+previous_node] -= weight_adjust_record[layer_num][previous_node+next_node*HiddenNode_num[layer_num-1]] * learning_rate ;
-							printf("add w : %f at (layer,node) : %d,%d\n",weight_adjust_record[layer_num][previous_node+next_node*HiddenNode_num[layer_num-1]] * learning_rate,layer_num,previous_node+HiddenNode_num[layer_num-1]*next_node);
+							// printf("add w : %f at (layer,node) : %d,%d\n",weight_adjust_record[layer_num][previous_node+next_node*HiddenNode_num[layer_num-1]] * learning_rate,layer_num,previous_node+HiddenNode_num[layer_num-1]*next_node);
 							// printf("layer : %d\n",layer_num);
 						}
 					}
 
 					bias[layer_num][next_node] -= bias_adjust_record[layer_num][next_node] * learning_rate ;
-					printf("add b : %f at (layer,node) : %d,%d\n\n",bias_adjust_record[layer_num][next_node] * learning_rate,layer_num,next_node);
+					// printf("add b : %f at (layer,node) : %d,%d\n\n",bias_adjust_record[layer_num][next_node] * learning_rate,layer_num,next_node);
 					// printf("layer : %d\n",layer_num);
 
 				}
