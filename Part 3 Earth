@@ -1,92 +1,129 @@
 #include <stdio.h>
 #include <math.h>
 
-// sigmoid
-float sigmoid(float x) {
-    return 1.0f / (1.0f + expf(-x));
-}
-float d_sigmoid(float x) {
-    float s = sigmoid(x);
-    return s * (1.0f - s);
+#define LAYERS 5
+
+// ---------------- Activation functions ----------------
+float linear(float x) { return x; }
+float binary_step(float x) { return x >= 0 ? 1 : 0; }
+float sigmoid(float x) { return 1.0f / (1.0f + expf(-x)); }
+float tanh_act(float x) { return tanhf(x); }
+float relu(float x) { return x > 0 ? x : 0; }
+float leaky_relu(float x) { return x > 0 ? x : 0.01f * x; }
+float softsign(float x) { return x / (1.0f + fabsf(x)); }
+float elu(float x) { return x >= 0 ? x : expf(x) - 1.0f; }
+float softplus(float x) { return x > 0 ? x + log1pf(expf(-x)) : log1pf(expf(x)); }
+float swish(float x) { return x / (1.0f + expf(-x)); }
+float mish(float x) { float sp = x > 0 ? x + log1pf(expf(-x)) : log1pf(expf(x)); return x * tanhf(sp); }
+float hard_sigmoid(float x) { float r = 0.2f*x + 0.5f; if(r<0) r=0; if(r>1) r=1; return r; }
+float hard_swish(float x) { return x * hard_sigmoid(x); }
+
+// ---------------- Derivatives ----------------
+float dlinear(float x) { return 1; }
+float dbinary_step(float x) { return 0; }
+float dsigmoid(float x) { float s=sigmoid(x); return s*(1-s); }
+float dtanh(float x) { float t=tanh(x); return 1-t*t; }
+float drelu(float x) { return x>0?1:0; }
+float dleaky_relu(float x) { return x>0?1:0.01f; }
+float dsoftsign(float x) { float denom=1+fabsf(x); return 1/(denom*denom); }
+float delu(float x) { return x>=0?1:expf(x); }
+float dsoftplus(float x) { return 1/(1+expf(-x)); }
+float dswish(float x) { float s=sigmoid(x); return s + x*s*(1-s); }
+float dmish(float x) { return 1; }
+float dhard_sigmoid(float x) { return (x>=-2.5f && x<=2.5f)?0.2f:0; }
+float dhard_swish(float x) { return hard_sigmoid(x) + x*dhard_sigmoid(x); }
+
+// ---------------- Loss functions ----------------
+float MSE(float *y){ return 0; }
+float MAE(float *y){ return 0; }
+float dMSE(float y){ return 0; }
+float dMAE(float y){ return 0; }
+
+// ---------------- Pointer arrays ----------------
+float (*functions_pointer[LAYERS])(float);
+float (*dfunction_pointer[LAYERS])(float);
+float (*lfunction_pointer)(float *);
+float (*dlfunction_pointer)(float);
+float (*outputfunction_pointer)(float);
+float (*doutputfunction_pointer)(float);
+
+// ---------------- Lists ----------------
+const char* activation_names[13] = {
+    "linear","binary_step","sigmoid","tanh","relu","leaky_relu",
+    "softsign","elu","softplus","swish","mish","hard_sigmoid","hard_swish"
+};
+
+const char* loss_names[2] = {"MSE","MAE"};
+const char* output_names[3] = {"linear","sigmoid","tanh"};
+
+// ---------------- Set functions using if-else ----------------
+void set_hidden_function(int layer, int choice){
+    choice--; // ปรับให้เริ่มที่ 1
+    if(choice==0){ functions_pointer[layer]=linear; dfunction_pointer[layer]=dlinear; }
+    else if(choice==1){ functions_pointer[layer]=binary_step; dfunction_pointer[layer]=dbinary_step; }
+    else if(choice==2){ functions_pointer[layer]=sigmoid; dfunction_pointer[layer]=dsigmoid; }
+    else if(choice==3){ functions_pointer[layer]=tanh_act; dfunction_pointer[layer]=dtanh; }
+    else if(choice==4){ functions_pointer[layer]=relu; dfunction_pointer[layer]=drelu; }
+    else if(choice==5){ functions_pointer[layer]=leaky_relu; dfunction_pointer[layer]=dleaky_relu; }
+    else if(choice==6){ functions_pointer[layer]=softsign; dfunction_pointer[layer]=dsoftsign; }
+    else if(choice==7){ functions_pointer[layer]=elu; dfunction_pointer[layer]=delu; }
+    else if(choice==8){ functions_pointer[layer]=softplus; dfunction_pointer[layer]=dsoftplus; }
+    else if(choice==9){ functions_pointer[layer]=swish; dfunction_pointer[layer]=dswish; }
+    else if(choice==10){ functions_pointer[layer]=mish; dfunction_pointer[layer]=dmish; }
+    else if(choice==11){ functions_pointer[layer]=hard_sigmoid; dfunction_pointer[layer]=dhard_sigmoid; }
+    else if(choice==12){ functions_pointer[layer]=hard_swish; dfunction_pointer[layer]=dhard_swish; }
+    else{ functions_pointer[layer]=linear; dfunction_pointer[layer]=dlinear; }
 }
 
-// relu
-float relu(float x) {
-    return (x > 0) ? x : 0;
-}
-float d_relu(float x) {
-    return (x > 0) ? 1.0f : 0.0f;
-}
-
-// leaky relu
-float leaky_relu(float x) {
-    return (x > 0) ? x : 0.01f * x;
-}
-float d_leaky_relu(float x) {
-    return (x > 0) ? 1.0f : 0.01f;
+void set_loss_function(int choice){
+    choice--;
+    if(choice==0){ lfunction_pointer=MSE; dlfunction_pointer=dMSE; }
+    else if(choice==1){ lfunction_pointer=MAE; dlfunction_pointer=dMAE; }
+    else{ lfunction_pointer=MSE; dlfunction_pointer=dMSE; }
 }
 
-// tanh
-float my_tanh(float x) {
-    float a = expf(x);
-    float b = expf(-x);
-    return (a - b) / (a + b);
-}
-float d_my_tanh(float x) {
-    float t = my_tanh(x);
-    return 1.0f - (t * t);
+void set_output_function(int choice){
+    choice--;
+    if(choice==0){ outputfunction_pointer=linear; doutputfunction_pointer=dlinear; }
+    else if(choice==1){ outputfunction_pointer=sigmoid; doutputfunction_pointer=dsigmoid; }
+    else if(choice==2){ outputfunction_pointer=tanh_act; doutputfunction_pointer=dtanh; }
+    else{ outputfunction_pointer=linear; doutputfunction_pointer=dlinear; }
 }
 
-// softsign
-float softsign(float x) {
-    return x / (1.0f + fabsf(x));
-}
-float d_softsign(float x) {
-    float d = 1.0f + fabsf(x);
-    return 1.0f / (d * d);
-}
+// ---------------- Main ----------------
+int main(){
+    int choice;
 
-// elu
-float elu(float x, float alpha) {
-    return (x >= 0) ? x : alpha * (expf(x) - 1.0f);
-}
-float d_elu(float x, float alpha) {
-    return (x >= 0) ? 1.0f : alpha * expf(x);
-}
+    printf("List of activation functions:\n");
+    for(int i=0;i<13;i++) printf("%2d) %s\n", i+1, activation_names[i]);
 
-// softplus
-float softplus(float x) {
-    return logf(1.0f + expf(x));
-}
-float d_softplus(float x) {
-    return sigmoid(x);
-}
+    printf("\nChoose %d hidden layer functions (1-13):\n",LAYERS);
+    for(int i=0;i<LAYERS;i++){
+        printf("Layer %d choice: ",i+1);
+        scanf("%d",&choice);
+        set_hidden_function(i,choice);
+    }
 
-// swish
-float swish(float x) {
-    return x * sigmoid(x);
-}
-float d_swish(float x) {
-    float s = sigmoid(x);
-    return s + x * s * (1.0f - s);
-}
+    printf("\nList of loss functions:\n");
+    for(int i=0;i<2;i++) printf("%d) %s\n", i+1, loss_names[i]);
+    printf("Choose loss function (1-2): ");
+    scanf("%d",&choice);
+    set_loss_function(choice);
 
-// binary step
-float binary_step(float x) {
-    return (x >= 0) ? 1.0f : 0.0f;
-}
-float d_binary_step(float x) {
-    return 0.0f;
-}
+    printf("\nList of output functions:\n");
+    for(int i=0;i<3;i++) printf("%d) %s\n", i+1, output_names[i]);
+    printf("Choose output function (1-3): ");
+    scanf("%d",&choice);
+    set_output_function(choice);
 
-// linear
-float linear(float x) {
-    return x;
-}
-float d_linear(float x) {
-    return 1.0f;
-}
+    // test print
+    float x=0.5;
+    for(int i=0;i<LAYERS;i++)
+        printf("Hidden %d: %f (derivative %f)\n",i+1,functions_pointer[i](x),dfunction_pointer[i](x));
 
+    printf("Output function: %f (derivative %f)\n",outputfunction_pointer(x),doutputfunction_pointer(x));
+
+<<<<<<< HEAD
 // mish
 float mish(float x) {
     return x * my_tanh(softplus(x));
@@ -150,5 +187,7 @@ void mse_derivative(double y[], double y_hat[], double grad[], int n) {
 
 
 int main() {
+=======
+>>>>>>> f606be441c50977d8afbf8526e5c69e828b7b778
     return 0;
 }

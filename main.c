@@ -56,25 +56,19 @@ void print (int number , float list[] ) {
     }
     printf("\ntest finished--------------- \n\n");
 }
-float mse(float actual[], float predicted[], int n) {
-    float sum_squared_error = 0.0;
+float mse(float *actual, float *predicted, int n) {
+    float sum_squared_error = 0.0f;
     for (int i = 0; i < n; i++) {
-        double error = actual[i] - predicted[i];
-
-        sum_squared_error += pow(error, 2);
+        float e = predicted[i] - actual[i];
+        sum_squared_error += e * e;
     }
-
-    printf("loss : %f",sum_squared_error/n);
-
     return sum_squared_error / n;
 }
 
-void mse_derivative(double y[], double *y_hat, double *grad, int n) {
-    // derivative: (2/n) * (y_hat[i] - y[i])
-    double factor = 2.0 / n;
-
+void mse_derivative(float *actual, float *predicted, float *grad, int n) {
+    float factor = 2.0f / n;
     for (int i = 0; i < n; i++) {
-        grad[i] = factor * (y_hat[i] - y[i]);
+        grad[i] = factor * (predicted[i] - actual[i]);
     }
 }
 
@@ -135,8 +129,8 @@ int layers = 5 ; //get from user input
 
 float (*functions_pointer[layers])(float) ;
 float (*dfunction_pointer[layers])(float) ;
-float (*lfunction_pointer)(float[],float*,int) ;
-float (*dlfunction_pointer)(float[],float*,float*,int) ;
+float (*lfunction_pointer)(float*, float*, int);
+void  (*dlfunction_pointer)(float*, float*, float*, int);
 float (*outputfunctions_pointer)(float) ;
 float (*doutputfunction_pointer)(float) ;
 
@@ -151,7 +145,7 @@ dfunction_pointer[1] = &d_relu;
 dfunction_pointer[2] = &d_relu;
 dfunction_pointer[3] = &d_relu;
 dfunction_pointer[4] = &d_relu;
-lfunction_pointer = &mse;
+lfunction_pointer  = &mse;
 dlfunction_pointer = &mse_derivative;
 outputfunctions_pointer = &linear;
 doutputfunction_pointer = &d_linear;
@@ -334,8 +328,11 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
 
     ///--------------------- form here, z_keep will keep dl/dz value  no ----------------------
 
-        losses[adjust_time_count] = (*lfunction_pointer)(label_samples,output,output_num); ////////////////////////////////////////
+        // losses[adjust_time_count] = (*lfunction_pointer)(label_samples,output,output_num);
+        float label_arr[1];
+        label_arr[0] = all_data[row].label_value;
 
+        losses[adjust_time_count] = lfunction_pointer(label_arr, output, 1);
         
 
 
@@ -347,11 +344,17 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
         //printf("w index start at %d\n\n",--w_index);
         //w_index-- ;
 
-        float dlossdoutput,doutputdz,*grad ;
-        grad = (float *)malloc(sizeof(float)*output_num);
+        float dlossdoutput,doutputdz;
+        // float *grad ;
+        // grad = (float *)malloc(sizeof(float)*output_num);
         // float dldzs[layers+1][];
 
-        (*dlfunction_pointer)(feature_samples,output,grad,output_num);
+        float grad[1];
+        dlfunction_pointer(label_arr, output, grad, 1);
+
+        dlossdoutput = grad[0]; 
+
+        // (*dlfunction_pointer)(feature_samples,output,grad,output_num);
 
         // dldas[layers] = 0;
 
