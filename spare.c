@@ -944,7 +944,7 @@ int main(void)
 	for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_count ++) {
 
 		float total_loss_epoch = 0 ;
-		for (int layer = 0; layer < layers+1; layer++)
+		
 			for (int layer = 0; layer < layers+1; layer++) {
 				int size_w;
 				if (layer == 0) {
