@@ -29,11 +29,11 @@ int feature_n = 3;                       // Counter for the number of selected f
 int row_num = 5;      // Total number of rows
 DataRow *all_data = NULL;  // Pointer to hold the array of DataRow (Actual data)
 
-int selected_label_index = -1;                 // 0-based index of the selected label
+                 // 0-based index of the selected label
 
 
 /////////////////////////////// functions ////////////////////////////////
-int output_num = 1 ;
+
 
 float linear(float x) {
     return x;
@@ -81,7 +81,7 @@ char selected_label[MAX_COL_NAME_LEN];
 
 int main() {
 
-    
+    int output_num = 1 ;
 
     strcpy(selected_features[0], "Age");          // เปลี่ยนได้เลย 
     strcpy(selected_features[1], "Salary"); 
@@ -123,7 +123,6 @@ int adjust_times = 1; // have to get user input first -----> do it later
 /////////////// read file, show to user and make user select (feture,row,label) ////////// output --> features,label,features_num ////////
 
 float losses[adjust_times] ; //for plot graph
-float loss ;
 
 int layers = 5 ; //get from user input
 
@@ -169,25 +168,15 @@ const int dimention[5] = {1,2,1,1,1}; // set of nodes inputed from user   [3,4,1
 float weights[6][3] = {{0.2,0.3,0.4},{0.5,0.6},{0.7,1.1},{1.2},{2.0},{2.1}}; 
 float bias[6][2] = {{3.2},{3.3,3.5},{3.8},{3.9},{4.0},{1.7}}; //from random
 
-float weight_adjust_record[6][2] = {{0,0,0},{0,0},{0,0},{0},{0},{0}}; //fix dimention//////////////////////////////////////////////
-float bias_adjust_record[6][2] = {{0},{0,0},{0},{0},{0},{0}}; //fix dimention////////////////////////////////////////////////
+ //fix dimention////////////////////////////////////////////////
 
 float sum ; //declare here is fine
-int w_size = 0; //for set z_value-array size 
+
 int number_of_node = 0 ; // for set size of array according to nodes
 
 
 
 for (int layer_num = 0 ; layer_num < layers ; layer_num ++ ) {
-    
-    if (layer_num == 0) {
-        w_size += feature_n*dimention[layer_num] ;
-    }else if (layer_num+1 == layers) {
-        w_size += output_num * dimention[layer_num] ;
-    }else {
-        w_size += dimention[layer_num-1] * dimention[layer_num] ;
-    }
-
 
     number_of_node += dimention[layer_num] ;
     // printf("%d\n",number_of_node);
@@ -213,7 +202,8 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
 
     ///////printf("loop number : %d\n",adjust_time_count); test memory over flow
 
-    
+    float weight_adjust_record[6][2] = {{0,0,0},{0,0},{0,0},{0},{0},{0}}; //fix dimention//////////////////////////////////////////////
+    float bias_adjust_record[6][2] = {{0},{0,0},{0},{0},{0},{0}};
 
     //printf("there is %d rows of data\n",row_num);
     printf("\n");
@@ -222,7 +212,7 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
 
         printf("\n             run trought row : %d\n",row);
 
-        int w_index = w_size; //for tracking index easily
+
         int node_index = 0; // using with activationfunction_output
         int previouslayernode_sum = 0 ;//for tracking previous node during interaction between layers
 
@@ -235,7 +225,7 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
 
                         
                         sum += all_data[row].feature_values[previous_node] * weights[layer_num][node_num*feature_n+previous_node] ;
-                        // printf("(%f * %f) + ",all_data[row].feature_values[previous_node],weights[layer_num][node_num*feature_n+previous_node]);
+                        printf("(%f * %f) + ",all_data[row].feature_values[previous_node],weights[layer_num][node_num*feature_n+previous_node]);
 
                         // printf("weight index : %d * %d + %d = %d\n",node_num,feature_n,previous_node,node_num*feature_n+previous_node);
                         //dzdw_array[w_index++] = all_data[row].feature_values[previous_node] ;
@@ -270,14 +260,15 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
                 //printf("base add : %d     layer : %d\n",dimention[layer_num],layer_num);
                 //printf("bias at layer : %d   node : %d     value : %f\n",layer_num,node_num,bias[layer_num][node_num]);
                 sum += bias[layer_num][node_num] ; 
-                // printf("%f\n",bias[layer_num][node_num]);
+                printf("%f\n",bias[layer_num][node_num]);
                 z_keep[node_index] = sum ;
+                // printf("output in this node : %f at index %d\n",sum,node_index);
                 sum = (*functions_pointer[layer_num])(sum) ; 
 
                 //printf("w index as in fp : %d\n",w_index);
                 
-
-                // printf("output in this node : %f at index %d\n",sum,node_index);
+                // printf("after function : %f at index %d\n",sum,node_index);
+                
 
                 node_index++;
                 
@@ -319,10 +310,10 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
             sum = (*outputfunctions_pointer)(sum);
             *(output+outputnode_num) = sum ;
 
-            // printf("output node%d's answer : %f\n",outputnode_num,sum);
+            printf("output node%d's answer : %f\n",outputnode_num,sum);
         }
 
-        // printf("-------finish answering----------\n");
+        printf("-------finish answering----------\n");
         // print(number_of_node,z_keep);
 
 
@@ -597,7 +588,7 @@ for (int next_node = 0 ; next_node < output_num ; next_node++) {
 printf("end of program....");
 ///////////// output ////////////////////
 
-printf("add w : %f\n",weight_adjust_record[0][2+0*3] * learning_rate);
+// printf("add w : %f\n",weight_adjust_record[0][2+0*3] * learning_rate);
 
 return 0;
 
