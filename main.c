@@ -377,7 +377,7 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
 
                         printf("furtest ==> dloss/dw%d : %f\n",closer_node,dldlast_z*dzdw);
 
-                        weight_adjust_record[layer_num][furter_node*dimention[layer_num]+closer_node] += (dldlast_z * dzdw)/row_num ;
+                        weight_adjust_record[layer_num][furter_node*dimention[layer_num-1]+closer_node] += (dldlast_z * dzdw)/row_num ;
 
 
 
@@ -393,8 +393,10 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
                     // printf("dvalue/dz = %f\n",dvaluedz);
                     // printf("dlda : %f\n",dlda);
                     dldz = dlda * dvaluedz;
+                    bias_adjust_record[layer_num-1][closer_node] = dldz;
+                    printf("==> dloss/ dbias : %f\n",dldz);
 
-                    printf("z index to keep dldz in closer node : %d + %d + 1 = %d    value : %f\n\n",base,closer_node,base+closer_node+1,dldz);
+                    // printf("z index to keep dldz in closer node : %d + %d + 1 = %d    value : %f\n\n",base,closer_node,base+closer_node+1,dldz);
                     z_keep[base+closer_node+1] = dldz;
 
                 }else{ //between hidden and hidden
@@ -411,7 +413,7 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
 
                         printf("==> dloss/dw%d : %f\n",closer_node,dldlast_z*dzdw);
 
-                        weight_adjust_record[layer_num][furter_node*dimention[layer_num]+closer_node] += (dldlast_z * dzdw)/row_num ;
+                        weight_adjust_record[layer_num][furter_node*dimention[layer_num-1]+closer_node] += (dldlast_z * dzdw)/row_num ;
 
                         // printf("\nfind dlda for furter  z index : %d + %d + %d + 1 = %d\n",base,furter_node,dimention[layer_num-1],base+furter_node+dimention[layer_num-1]+1);
                         // printf("find dlda for furter  w (layer,index) : %d,(%d + %d * %d = %d)\n\n",layer_num,closer_node,dimention[layer_num-1],furter_node,furter_node*dimention[layer_num-1]+closer_node);
@@ -424,10 +426,13 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
 
                     dvaluedz = (*dfunction_pointer[layer_num-1])(z_keep[base+closer_node+1]);
 
-                    printf("dlda = %f\n",dlda);
+                    // printf("dlda = %f\n",dlda);
                     dldz = dlda * dvaluedz;
                     z_keep[base+closer_node+1] = dldz;
                     // print(number_of_node,z_keep);
+                    bias_adjust_record[layer_num-1][closer_node] = dldz ;
+
+                    printf("==> dloss/ dbias : %f\n",dldz);
                     
                 
                     node_index--;
@@ -437,14 +442,14 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
                 
             }
             if (1) {
-                printf("base - (num of %d)       %d  -->  %d\n",layer_num-1,base,base-dimention[layer_num-2]);
+                // printf("base - (num of %d)       %d  -->  %d\n",layer_num-1,base,base-dimention[layer_num-2]);
                 base -= dimention[layer_num-2];
             }
             
         }
-        print(number_of_node,z_keep);
+        // print(number_of_node,z_keep);
         printf("\n--> layer num for backprop :0\n\n");
-        printf("base variable in final phase : %d\n",base);
+        // printf("base variable in final phase : %d\n",base);
 
         
         for (int closer_node = feature_n-1 ; closer_node >= 0 ; closer_node--) { ///segmentation false//////////////////////////////////////
@@ -461,25 +466,14 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
 
                 printf("==> dloss/dw%d : %f\n",closer_node,dldlast_z*dzdw);
 
-                // weight_adjust_record[layer_num][furter_node*dimention[layer_num]+closer_node] += (dldlast_z * dzdw)/row_num ;
+                weight_adjust_record[0][furter_node*feature_n+closer_node] += (dldlast_z * dzdw)/row_num ;
 
                 // printf("\nfind dlda for furter  z index : %d + %d + %d + 1 = %d\n",base,furter_node,dimention[layer_num-1],base+furter_node+dimention[layer_num-1]+1);
                 // printf("find dlda for furter  w (layer,index) : %d,(%d + %d * %d = %d)\n\n",layer_num,closer_node,dimention[layer_num-1],furter_node,furter_node*dimention[layer_num-1]+closer_node);
 
-                // dldz += z_keep[base+furter_node+1] * weights[0][closer_node+furter_node*feature_n] ;
-
             }
 
-
-            // printf("dlda = %f\n",dlda);
-            // dldz = dlda * dvaluedz;
-            // z_keep[base+closer_node+1] = dldz;
-
         }
-
-        print(number_of_node,z_keep);
-
-        
 
     }
 
@@ -490,8 +484,8 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
         if(layer_num == layers){
             for (int next_node = 0 ; next_node < output_num ; next_node++) {
                 for (int previous_node = 0 ; previous_node < dimention[layer_num-1] ; previous_node++) {
-                    weights[layer_num][next_node*dimention[layer_num]+previous_node] -= weight_adjust_record[layer_num][previous_node+next_node*dimention[layer_num]] * learning_rate ;
-                    printf("add w : %f at (layer,node) : %d,%d\n",weight_adjust_record[layer_num][previous_node+next_node*dimention[layer_num]] * learning_rate,layer_num,previous_node+dimention[layer_num]*next_node);
+                    weights[layer_num][next_node*dimention[layer_num-1]+previous_node] -= weight_adjust_record[layer_num][previous_node+next_node*dimention[layer_num-1]] * learning_rate ;
+                    printf("add w : %f at (layer,node) : %d,%d\n",weight_adjust_record[layer_num][previous_node+next_node*dimention[layer_num-1]] * learning_rate,layer_num,previous_node+dimention[layer_num]*next_node);
                     // printf("layer : %d\n",layer_num);
                 }
 
@@ -505,14 +499,14 @@ for (int adjust_time_count = 0 ; adjust_time_count < adjust_times ; adjust_time_
             for (int next_node = 0 ; next_node < dimention[layer_num] ; next_node++) {
                 if (layer_num == 0) {
                     for (int previous_node = 0 ; previous_node < feature_n ; previous_node++) {
-                        weights[layer_num][next_node*dimention[layer_num]+previous_node] -= weight_adjust_record[layer_num][previous_node+next_node*dimention[layer_num]] * learning_rate ;
-                        printf("add w : %f at (layer,node) : %d,%d\n",weight_adjust_record[layer_num][previous_node+next_node*dimention[layer_num]] * learning_rate,layer_num,previous_node+dimention[layer_num]*next_node);
+                        weights[layer_num][next_node*feature_n+previous_node] -= weight_adjust_record[layer_num][previous_node+next_node*feature_n] * learning_rate ;
+                        printf("add w : %f at (layer,node) : %d,%d\n",weight_adjust_record[layer_num][previous_node+next_node*feature_n] * learning_rate,layer_num,previous_node+dimention[layer_num]*next_node);
                         // printf("layer : %d\n",layer_num);
                     }
                 }else{
                     for (int previous_node = 0 ; previous_node < dimention[layer_num-1] ; previous_node++) {
-                        weights[layer_num][next_node*dimention[layer_num]+previous_node] -= weight_adjust_record[layer_num][previous_node+next_node*dimention[layer_num]] * learning_rate ;
-                        printf("add w : %f at (layer,node) : %d,%d\n",weight_adjust_record[layer_num][previous_node+next_node*dimention[layer_num]] * learning_rate,layer_num,previous_node+dimention[layer_num]*next_node);
+                        weights[layer_num][next_node*dimention[layer_num-1]+previous_node] -= weight_adjust_record[layer_num][previous_node+next_node*dimention[layer_num-1]] * learning_rate ;
+                        printf("add w : %f at (layer,node) : %d,%d\n",weight_adjust_record[layer_num][previous_node+next_node*dimention[layer_num-1]] * learning_rate,layer_num,previous_node+dimention[layer_num]*next_node);
                         // printf("layer : %d\n",layer_num);
                     }
                 }
@@ -540,11 +534,11 @@ for (int layer_num = 0 ; layer_num < layers ; layer_num++) {
         printf("\nnode : %d\n",next_node);
         if (layer_num == 0) {
             for (int previous_node = 0 ; previous_node < feature_n ; previous_node++) {
-                printf("final weight : %f\n",weights[layer_num][previous_node+next_node*dimention[layer_num]]);
+                printf("final weight : %f\n",weights[layer_num][previous_node+next_node*feature_n]);
             }
         }else {
             for (int previous_node = 0 ; previous_node < dimention[layer_num-1] ; previous_node++) {
-                printf("final weight : %f\n",weights[layer_num][previous_node+next_node*dimention[layer_num]]);
+                printf("final weight : %f\n",weights[layer_num][previous_node+next_node*dimention[layer_num-1]]);
             }
         }
         
