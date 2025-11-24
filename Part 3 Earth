@@ -1,5 +1,27 @@
+// neural_network_full.c
+// Simple multi-layer perceptron in plain C
+// - Read CSV (numbers only, header in first row)
+// - Choose feature columns and label column (binary)
+// - Normalize features (min-max 0..1) -- note: fits on whole dataset in this version
+// - Create network (user specifies hidden layers in simple shorthand)
+// - Train with SGD (shuffle each epoch), loss = binary cross-entropy
+// - Test accuracy on hold-out set (80:20)
+// This version uses the activation functions you provided (sigmoid, relu, etc.)
+// and includes a global mode flag "deri" vs "normal" (use derivative in hidden backprop or not).
+// Per-layer activation/advanced features were intentionally left out as requested.
+
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <math.h>
+#include <time.h>
+
+#define MAX_ROWS 2000
+#define MAX_COLS 64
+#define MAX_NAME_LEN 128
+#define MAX_LINE 4096
+
+// ---------------- Activation functions (as you provided) ----------------
 
 // sigmoid
 float sigmoid(float x) {
@@ -119,15 +141,486 @@ float d_hard_swish(float x) {
     return (hs + x * d_hs);
 }
 
-// softmax
+// softmax (simple)
 void softmax(float arr[], float out[], int n) {
-    float sum = 0;
-    for(int i = 0; i < n; i++)
-        sum += expf(arr[i]);
-    for(int i = 0; i < n; i++)
-        out[i] = expf(arr[i]) / sum;
+    // numerically stable softmax: subtract max
+    float maxv = -INFINITY;
+    for (int i = 0; i < n; i++) if (arr[i] > maxv) maxv = arr[i];
+    float sum = 0.0f;
+    for (int i = 0; i < n; i++) {
+        float e = expf(arr[i] - maxv);
+        out[i] = e;
+        sum += e;
+    }
+    if (sum == 0.0f) {
+        float v = 1.0f / (float)n;
+        for (int i = 0; i < n; i++) out[i] = v;
+        return;
+    }
+    for (int i = 0; i < n; i++) out[i] /= sum;
 }
 
-int main() {
+// ---------------- Dataset structure ----------------
+typedef struct {
+    float data[MAX_ROWS][MAX_COLS];
+    char colnames[MAX_COLS][MAX_NAME_LEN];
+    int rows;
+    int cols;
+} Dataset;
+
+// ---------------- NN structures ----------------
+typedef struct {
+    float **weights;   // weights[layer] -> array size = from_nodes * to_nodes
+    float **bias;      // bias[layer] -> array size = to_nodes
+    int *layer_sizes;  // length = num_layers
+    int num_layers;    // includes input and output layers
+} NeuralNetwork;
+
+typedef struct {
+    float **activations; // activations[layer] len = layer_sizes[layer]
+    float **z_values;    // z_values[layer] len = layer_sizes[layer+1] (pre-activation)
+} ForwardCache;
+
+// ---------------- Utility ----------------
+float frand_range(float a, float b) {
+    return a + ((float)rand() / (float)RAND_MAX) * (b - a);
+}
+
+void shuffle_int_array(int *arr, int n) {
+    for(int i = n-1; i > 0; i--) {
+        int j = rand() % (i+1);
+        int tmp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = tmp;
+    }
+}
+
+// ---------------- CSV reading ----------------
+int read_csv(const char *fname, Dataset *ds) {
+    FILE *f = fopen(fname, "r");
+    if (!f) return 0;
+    char line[MAX_LINE];
+
+    ds->rows = 0;
+    ds->cols = 0;
+
+    // header
+    if (!fgets(line, sizeof(line), f)) { fclose(f); return 0; }
+    // strip newline/cr
+    char *p = strchr(line, '\r'); if (p) *p = '\0';
+    p = strchr(line, '\n'); if (p) *p = '\0';
+
+    // tokenize header by comma
+    char *tok = strtok(line, ",");
+    while(tok && ds->cols < MAX_COLS) {
+        while(*tok == ' ') tok++;
+        strncpy(ds->colnames[ds->cols], tok, MAX_NAME_LEN-1);
+        ds->colnames[ds->cols][MAX_NAME_LEN-1] = '\0';
+        ds->cols++;
+        tok = strtok(NULL, ",");
+    }
+
+    // rows
+    while(fgets(line, sizeof(line), f) && ds->rows < MAX_ROWS) {
+        char *q = strchr(line, '\r'); if (q) *q = '\0';
+        q = strchr(line, '\n'); if (q) *q = '\0';
+
+        int col = 0;
+        char *t = strtok(line, ",");
+        while(t && col < ds->cols) {
+            ds->data[ds->rows][col] = (float)atof(t);
+            col++;
+            t = strtok(NULL, ",");
+        }
+        ds->rows++;
+    }
+
+    fclose(f);
+    return 1;
+}
+
+// ---------------- Normalize ----------------
+void normalize_column(Dataset *d, int col) {
+    float minv = d->data[0][col];
+    float maxv = d->data[0][col];
+    for(int i = 1; i < d->rows; i++) {
+        if (d->data[i][col] < minv) minv = d->data[i][col];
+        if (d->data[i][col] > maxv) maxv = d->data[i][col];
+    }
+    float range = maxv - minv;
+    if (range <= 0.0f) return;
+    for(int i = 0; i < d->rows; i++) {
+        d->data[i][col] = (d->data[i][col] - minv) / range;
+    }
+}
+
+// ---------------- Network create / free ----------------
+NeuralNetwork* create_network(int *layer_sizes, int num_layers) {
+    NeuralNetwork *nn = (NeuralNetwork*)malloc(sizeof(NeuralNetwork));
+    nn->num_layers = num_layers;
+    nn->layer_sizes = (int*)malloc(sizeof(int) * num_layers);
+    for(int i = 0; i < num_layers; i++) nn->layer_sizes[i] = layer_sizes[i];
+
+    int weight_layers = num_layers - 1;
+    nn->weights = (float**)malloc(sizeof(float*) * weight_layers);
+    nn->bias = (float**)malloc(sizeof(float*) * weight_layers);
+
+    for(int l = 0; l < weight_layers; l++) {
+        int from = layer_sizes[l];
+        int to = layer_sizes[l+1];
+        nn->weights[l] = (float*)malloc(sizeof(float) * from * to);
+        nn->bias[l] = (float*)malloc(sizeof(float) * to);
+
+        float limit = 0.5f * sqrtf(2.0f / (float)from);
+        for(int i = 0; i < from * to; i++) {
+            nn->weights[l][i] = frand_range(-limit, limit);
+        }
+        for(int j = 0; j < to; j++) {
+            nn->bias[l][j] = 0.0f;
+        }
+    }
+    return nn;
+}
+
+void free_network(NeuralNetwork *nn) {
+    if (!nn) return;
+    int weight_layers = nn->num_layers - 1;
+    for(int l = 0; l < weight_layers; l++) {
+        free(nn->weights[l]);
+        free(nn->bias[l]);
+    }
+    free(nn->weights);
+    free(nn->bias);
+    free(nn->layer_sizes);
+    free(nn);
+}
+
+// ---------------- Cache create / free ----------------
+ForwardCache* create_cache(int *layer_sizes, int num_layers) {
+    ForwardCache *c = (ForwardCache*)malloc(sizeof(ForwardCache));
+    c->activations = (float**)malloc(sizeof(float*) * num_layers);
+    c->z_values = (float**)malloc(sizeof(float*) * (num_layers - 1));
+
+    for(int i = 0; i < num_layers; i++) {
+        c->activations[i] = (float*)malloc(sizeof(float) * layer_sizes[i]);
+    }
+    for(int i = 0; i < num_layers - 1; i++) {
+        c->z_values[i] = (float*)malloc(sizeof(float) * layer_sizes[i+1]);
+    }
+    return c;
+}
+
+void free_cache(ForwardCache *c, int num_layers) {
+    if (!c) return;
+    for(int i = 0; i < num_layers; i++) free(c->activations[i]);
+    for(int i = 0; i < num_layers - 1; i++) free(c->z_values[i]);
+    free(c->activations);
+    free(c->z_values);
+    free(c);
+}
+
+// ---------------- Forward propagation ----------------
+void forward_propagation(NeuralNetwork *nn, float *input, ForwardCache *cache) {
+    int L = nn->num_layers;
+
+    // copy input
+    for(int i = 0; i < nn->layer_sizes[0]; i++) cache->activations[0][i] = input[i];
+
+    for(int layer = 0; layer < L - 1; layer++) {
+        int in_size = nn->layer_sizes[layer];
+        int out_size = nn->layer_sizes[layer + 1];
+        float *W = nn->weights[layer];
+        float *b = nn->bias[layer];
+        float *a_prev = cache->activations[layer];
+        float *z = cache->z_values[layer];
+        float *a = cache->activations[layer+1];
+
+        for(int j = 0; j < out_size; j++) {
+            float s = b[j];
+            for(int i = 0; i < in_size; i++) {
+                s += a_prev[i] * W[i * out_size + j];
+            }
+            z[j] = s;
+        }
+
+        // activation: hidden -> ReLU, last -> Sigmoid
+        if (layer < L - 2) {
+            for(int j = 0; j < out_size; j++) a[j] = relu(z[j]);
+        } else {
+            for(int j = 0; j < out_size; j++) a[j] = sigmoid(z[j]);
+        }
+    }
+}
+
+// ---------------- Backpropagation and update ----------------
+// use_derivative: if non-zero, multiply hidden deltas by activation derivative (d_relu)
+// if zero, use factor 1.0 (skip derivative)
+void backward_propagation_and_update(NeuralNetwork *nn, ForwardCache *cache, float target, float lr, int use_derivative) {
+    int L = nn->num_layers;
+    int weight_layers = L - 1;
+
+    float **deltas = (float**)malloc(sizeof(float*) * weight_layers);
+    for(int l = 0; l < weight_layers; l++) {
+        deltas[l] = (float*)malloc(sizeof(float) * nn->layer_sizes[l+1]);
+    }
+
+    // output delta (single output assumed)
+    int out_layer = weight_layers - 1;
+    float out_val = cache->activations[L-1][0];
+    deltas[out_layer][0] = out_val - target;
+
+    // backpropagate through hidden layers
+    for(int layer = weight_layers - 2; layer >= 0; layer--) {
+        int curr_nodes = nn->layer_sizes[layer+1];
+        int next_nodes = nn->layer_sizes[layer+2];
+
+        for(int i = 0; i < curr_nodes; i++) {
+            float sum = 0.0f;
+            for(int j = 0; j < next_nodes; j++) {
+                sum += deltas[layer+1][j] * nn->weights[layer+1][i * next_nodes + j];
+            }
+            float act_deriv = use_derivative ? d_relu(cache->z_values[layer][i]) : 1.0f;
+            deltas[layer][i] = sum * act_deriv;
+        }
+    }
+
+    // gradient descent update
+    for(int layer = 0; layer < weight_layers; layer++) {
+        int in_size = nn->layer_sizes[layer];
+        int out_size = nn->layer_sizes[layer+1];
+        float *W = nn->weights[layer];
+        float *b = nn->bias[layer];
+        float *a_prev = cache->activations[layer];
+
+        for(int j = 0; j < out_size; j++) {
+            for(int i = 0; i < in_size; i++) {
+                float grad = deltas[layer][j] * a_prev[i];
+                W[i * out_size + j] -= lr * grad;
+            }
+            b[j] -= lr * deltas[layer][j];
+        }
+    }
+
+    for(int l = 0; l < weight_layers; l++) free(deltas[l]);
+    free(deltas);
+}
+
+// ---------------- Loss ----------------
+float bce_loss(float pred, float target) {
+    float eps = 1e-7f;
+    if (pred < eps) pred = eps;
+    if (pred > 1.0f - eps) pred = 1.0f - eps;
+    return - (target * logf(pred) + (1.0f - target) * logf(1.0f - pred));
+}
+
+// ---------------- Main & helpers ----------------
+static void print_usage(const char *prog) {
+    printf("Usage: %s data.csv label_col hidden_spec epochs lr seed mode\n", prog);
+    printf(" - data.csv       : CSV file with header row and numeric columns\n");
+    printf(" - label_col      : label column index (0-based) or column name\n");
+    printf(" - hidden_spec    : comma separated sizes e.g. 16,8  OR single integer n -> n hidden layers default size 16 OR n:sz -> n layers size sz\n");
+    printf(" - epochs         : number of epochs (e.g. 100)\n");
+    printf(" - lr             : learning rate (e.g. 0.01)\n");
+    printf(" - seed           : random seed (int)\n");
+    printf(" - mode           : 'deri' (use activation derivative in hidden backprop) or 'normal' (skip derivative i.e. use factor=1)\n");
+}
+
+int resolve_label_column(Dataset *d, const char *s) {
+    char *endptr = NULL;
+    long v = strtol(s, &endptr, 10);
+    if (endptr != s && *endptr == '\0') {
+        if (v >= 0 && v < d->cols) return (int)v;
+        return -1;
+    }
+    for(int c = 0; c < d->cols; c++) {
+        if (strcmp(d->colnames[c], s) == 0) return c;
+    }
+    return -1;
+}
+
+int str_contains_any(const char *s, const char *chars) {
+    for(; *s; s++) {
+        for(const char *c = chars; *c; c++) if (*s == *c) return 1;
+    }
+    return 0;
+}
+
+int main(int argc, char **argv) {
+    if (argc < 8) {
+        print_usage(argv[0]);
+        return 1;
+    }
+
+    const char *fname = argv[1];
+    const char *label_arg = argv[2];
+    const char *hidden_arg = argv[3];
+    int epochs = atoi(argv[4]);
+    float lr = (float)atof(argv[5]);
+    int seed = atoi(argv[6]);
+    const char *mode_arg = argv[7];
+
+    srand((unsigned int)seed);
+
+    Dataset ds;
+    if (!read_csv(fname, &ds)) {
+        fprintf(stderr, "Failed to read CSV '%s'\n", fname);
+        return 1;
+    }
+    if (ds.rows <= 1) {
+        fprintf(stderr, "Dataset too small: rows=%d\n", ds.rows);
+        return 1;
+    }
+
+    int label_col = resolve_label_column(&ds, label_arg);
+    if (label_col < 0) {
+        fprintf(stderr, "Failed to resolve label column '%s'\n", label_arg);
+        return 1;
+    }
+
+    int feature_cols[MAX_COLS];
+    int n_features = 0;
+    for(int c = 0; c < ds.cols; c++) {
+        if (c == label_col) continue;
+        feature_cols[n_features++] = c;
+    }
+
+    // normalize features (current simple behavior: normalize entire dataset)
+    for(int i = 0; i < n_features; i++) normalize_column(&ds, feature_cols[i]);
+
+    // parse hidden layers
+    int hidden_sizes[MAX_COLS];
+    int hidden_count = 0;
+    const int default_hidden_size = 16;
+
+    if (strchr(hidden_arg, ',') != NULL) {
+        char tmp[256];
+        strncpy(tmp, hidden_arg, sizeof(tmp)-1);
+        tmp[sizeof(tmp)-1] = '\0';
+        char *tok = strtok(tmp, ",");
+        while(tok && hidden_count < MAX_COLS) {
+            int v = atoi(tok);
+            if (v > 0) hidden_sizes[hidden_count++] = v;
+            tok = strtok(NULL, ",");
+        }
+    } else if (str_contains_any(hidden_arg, ":x*")) {
+        char sep = ':';
+        if (strchr(hidden_arg, 'x')) sep = 'x';
+        else if (strchr(hidden_arg, '*')) sep = '*';
+        char tmp[64];
+        strncpy(tmp, hidden_arg, sizeof(tmp)-1);
+        tmp[sizeof(tmp)-1] = '\0';
+        char *p = strchr(tmp, sep);
+        if (p) {
+            *p = '\0';
+            int n = atoi(tmp);
+            int sz = atoi(p+1);
+            if (n > 0 && sz > 0) {
+                for(int i = 0; i < n && hidden_count < MAX_COLS; i++) hidden_sizes[hidden_count++] = sz;
+            }
+        }
+    } else {
+        char *endptr = NULL;
+        long v = strtol(hidden_arg, &endptr, 10);
+        if (endptr != hidden_arg && *endptr == '\0' && v > 0) {
+            int n = (int)v;
+            for(int i = 0; i < n && hidden_count < MAX_COLS; i++) hidden_sizes[hidden_count++] = default_hidden_size;
+        } else {
+            int one = atoi(hidden_arg);
+            if (one > 0) hidden_sizes[hidden_count++] = one;
+        }
+    }
+
+    int num_layers = 1 + hidden_count + 1;
+    int *layer_sizes = (int*)malloc(sizeof(int) * num_layers);
+    layer_sizes[0] = n_features;
+    for(int i = 0; i < hidden_count; i++) layer_sizes[1 + i] = hidden_sizes[i];
+    layer_sizes[num_layers - 1] = 1;
+
+    int use_derivative = 1;
+    if (strcmp(mode_arg, "deri") == 0) use_derivative = 1;
+    else if (strcmp(mode_arg, "normal") == 0) use_derivative = 0;
+    else {
+        fprintf(stderr, "Unknown mode '%s' (use 'deri' or 'normal')\n", mode_arg);
+        free(layer_sizes);
+        return 1;
+    }
+
+    NeuralNetwork *nn = create_network(layer_sizes, num_layers);
+    ForwardCache *cache = create_cache(layer_sizes, num_layers);
+
+    int indices[MAX_ROWS];
+    for(int i = 0; i < ds.rows; i++) indices[i] = i;
+    shuffle_int_array(indices, ds.rows);
+    int n_train = (int)(0.8f * ds.rows);
+    if (n_train < 1) n_train = ds.rows - 1;
+    int n_test = ds.rows - n_train;
+
+    int train_idx[MAX_ROWS], test_idx[MAX_ROWS];
+    for(int i = 0; i < n_train; i++) train_idx[i] = indices[i];
+    for(int i = 0; i < n_test; i++) test_idx[i] = indices[n_train + i];
+
+    float *input = (float*)malloc(sizeof(float) * n_features);
+
+    printf("Dataset: rows=%d cols=%d features=%d label_col=%d\n", ds.rows, ds.cols, n_features, label_col);
+    printf("Network: input=%d hidden=%d output=1 epochs=%d lr=%g seed=%d mode=%s\n", n_features, hidden_count, epochs, lr, seed, mode_arg);
+    printf(" Hidden sizes: ");
+    for(int i = 0; i < hidden_count; i++) printf("%d%s", hidden_sizes[i], (i==hidden_count-1)?"\n":",");
+    if (hidden_count == 0) printf("(none)\n");
+
+    for(int e = 0; e < epochs; e++) {
+        shuffle_int_array(train_idx, n_train);
+        float epoch_loss = 0.0f;
+        for(int t = 0; t < n_train; t++) {
+            int rid = train_idx[t];
+            for(int f = 0; f < n_features; f++) input[f] = ds.data[rid][feature_cols[f]];
+            float target = ds.data[rid][label_col];
+
+            forward_propagation(nn, input, cache);
+            float pred = cache->activations[nn->num_layers - 1][0];
+            epoch_loss += bce_loss(pred, target);
+
+            backward_propagation_and_update(nn, cache, target, lr, use_derivative);
+        }
+        epoch_loss /= (float)n_train;
+
+        if ((e % 10) == 0 || e == epochs - 1) {
+            int correct = 0;
+            for(int t = 0; t < n_train; t++) {
+                int rid = train_idx[t];
+                for(int f = 0; f < n_features; f++) input[f] = ds.data[rid][feature_cols[f]];
+                forward_propagation(nn, input, cache);
+                float pred = cache->activations[nn->num_layers - 1][0];
+                int p = (pred >= 0.5f) ? 1 : 0;
+                int y = (ds.data[rid][label_col] >= 0.5f) ? 1 : 0;
+                if (p == y) correct++;
+            }
+            float acc = (float)correct / (float)n_train;
+            printf("Epoch %4d loss=%.6f train_acc=%.4f\n", e, epoch_loss, acc);
+        }
+    }
+
+    int correct = 0;
+    float test_loss = 0.0f;
+    for(int i = 0; i < n_test; i++) {
+        int rid = test_idx[i];
+        for(int f = 0; f < n_features; f++) input[f] = ds.data[rid][feature_cols[f]];
+        float target = ds.data[rid][label_col];
+        forward_propagation(nn, input, cache);
+        float pred = cache->activations[nn->num_layers - 1][0];
+        test_loss += bce_loss(pred, target);
+        int p = (pred >= 0.5f) ? 1 : 0;
+        int y = (target >= 0.5f) ? 1 : 0;
+        if (p == y) correct++;
+    }
+    test_loss /= (float)n_test;
+    float test_acc = (float)correct / (float)n_test;
+
+    printf("Test: rows=%d loss=%.6f acc=%.4f\n", n_test, test_loss, test_acc);
+
+    free(input);
+    free_cache(cache, num_layers);
+    free_network(nn);
+    free(layer_sizes);
+
     return 0;
 }
