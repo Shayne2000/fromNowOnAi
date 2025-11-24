@@ -706,7 +706,7 @@ int main(void)
 	scanf("%d", &Adjust_time);
 	while (getchar() != '\n')
 		;
-	float losses[Adjust_time]; // updated
+	float *losses = (float *)malloc(Adjust_time * sizeof(float)); // updated
 	//--------------------------------------------------
 
 	// train test split
@@ -722,7 +722,7 @@ int main(void)
 
 	train_test_split(all_data_2, row_num, &train_set, &test_set);
 
-	free(all_data_2); // Free
+	// free(all_data_2); // Free
 
 	// split train/test set
 	// for (int i = 0; i < train_set.size; i++)
@@ -761,9 +761,9 @@ int main(void)
 	// 	printf(" Label: %f\n", test_labels[i]);
 	// }
 	//---------------------------------------------------------------------------------------
-	int total_hidden_nodes = 0; // random hidden bias
-	for (int i = 0; i < hiddenLayers_num; i++)
-		total_hidden_nodes += HiddenNode_num[i];
+	// int total_hidden_nodes = 0; // random hidden bias
+	// for (int i = 0; i < hiddenLayers_num; i++)
+	// 	total_hidden_nodes += HiddenNode_num[i];
 
 	// float *hiddenLayersBias = (float *)malloc(total_hidden_nodes * sizeof(float));
 
