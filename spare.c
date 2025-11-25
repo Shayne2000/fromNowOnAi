@@ -918,7 +918,6 @@ int main(void)
 	int number_of_node = 0 ; // for set size of array according to nodes
 
 
-
 	for (int layer_num = 0 ; layer_num < layers ; layer_num ++ ) {
 
 		number_of_node += HiddenNode_num[layer_num] ;
@@ -1045,7 +1044,7 @@ int main(void)
 			// print(number_of_node,z_keep);
 
 			// printf("\n-----finished forward propagation--------\n");
-			print(number_of_node,z_keep);
+			// print(number_of_node,z_keep);
 
 			for (int outputnode_num = 0 ; outputnode_num < output_num ; outputnode_num ++) { 
 				
