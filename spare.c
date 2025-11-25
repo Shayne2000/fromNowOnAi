@@ -1308,44 +1308,44 @@ int main(void)
 				}
 					
 			}
-			printf("\n");
+			// printf("\n");
 		}
 		
 
 	}
 
-	printf("\nprinting model \n\n");
+	// printf("\nprinting model \n\n");
 
-	printf("%d",HiddenNode_num[1]);
+	// printf("%d",HiddenNode_num[1]);
 
 	for (int layer_num = 0 ; layer_num < layers ; layer_num++) { 
-		printf("model in layer : %d    have %d node\n",layer_num,HiddenNode_num[layer_num]);
+		// printf("model in layer : %d    have %d node\n",layer_num,HiddenNode_num[layer_num]);
 		for (int next_node = 0 ; next_node < HiddenNode_num[layer_num] ; next_node++) {
-			printf("\nnode : %d\n",next_node);
+			// printf("\nnode : %d\n",next_node);
 			if (layer_num == 0) {
 				for (int previous_node = 0 ; previous_node < feature_n ; previous_node++) {
-					printf("final weight : %f\n",weights[layer_num][previous_node+next_node*feature_n]);
+					// printf("final weight : %f\n",weights[layer_num][previous_node+next_node*feature_n]);
 				}
 			}else {
 				for (int previous_node = 0 ; previous_node < HiddenNode_num[layer_num-1] ; previous_node++) {
-					printf("final weight : %f\n",weights[layer_num][previous_node+next_node*HiddenNode_num[layer_num-1]]);
+					// printf("final weight : %f\n",weights[layer_num][previous_node+next_node*HiddenNode_num[layer_num-1]]);
 				}
 			}
 			
 
-			printf("final bias : %f\n\n\n",bias[layer_num][next_node]);
+			// printf("final bias : %f\n\n\n",bias[layer_num][next_node]);
 
 		}
 				
 	}
 	for (int next_node = 0 ; next_node < output_num ; next_node++) {
-			printf("\nnode : %d\n",next_node);
+			// printf("\nnode : %d\n",next_node);
 			// printf("%d",HiddenNode_num[layers]);
 			for (int previous_node = 0 ; previous_node < HiddenNode_num[layers-1] ; previous_node++) {
-				printf("final weight : %f\n",weights[layers][previous_node+next_node*HiddenNode_num[layers-1]]);
+				// printf("final weight : %f\n",weights[layers][previous_node+next_node*HiddenNode_num[layers-1]]);
 			}
 
-			printf("final bias : %f\n\n\n",bias[layers][next_node]);
+			// printf("final bias : %f\n\n\n",bias[layers][next_node]);
 
 		}
 			
@@ -1361,7 +1361,7 @@ int main(void)
 	float total_loss_epoch = 0 ;
 		for (int row = 0 ; row < test_set.size ; row ++ ) {
 
-			printf("\n             run trought row : %d\n",row);
+			// printf("\n             run trought row : %d\n",row);
 
 
 			int node_index = 0; // using with activationfunction_output
@@ -1406,7 +1406,7 @@ int main(void)
 
 			}
 
-			printf("\n-----finished forward propagation--------\n");
+			// printf("\n-----finished forward propagation--------\n");
 
 			for (int outputnode_num = 0 ; outputnode_num < output_num ; outputnode_num ++) { 
 				
@@ -1424,17 +1424,17 @@ int main(void)
 				sum = (*outputfunction_pointer)(sum);
 				*(output+outputnode_num) = sum ;
 
-				printf("output node%d's answer : %f\n",outputnode_num,sum);
+				// printf("output node%d's answer : %f\n",outputnode_num,sum);
 			}
 
-		printf("-------finish answering----------\n");
+		// printf("-------finish answering----------\n");
 
 		float label_arr[1];
 		label_arr[0] = test_set.rows[row].label_value;
 
 		total_loss_epoch += lfunction_pointer(label_arr, output, 1);
 
-		}
+	}
 
 		printf("evaluate model   loss : %f\n",total_loss_epoch/test_set.size);
 
