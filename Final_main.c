@@ -27,7 +27,7 @@ int num_columns = 0;
 // Global variables for selected features and label names
 char selected_features[SELECTION_SIZE][MAX_COL_NAME_LEN];
 char selected_label[MAX_COL_NAME_LEN];
-int feature_n = 0; // Counter for the number of selected features (Used as feature_num)
+int feature_n = 0; // Counter for the number of selected features 
 
 // New global variables for data storage and indices
 int row_num = 0;							// Total number of data rows (Used as row_Num)
@@ -71,7 +71,6 @@ void split_first_row(const char *first_row)
 	strncpy(temp_row, first_row, sizeof(temp_row) - 1);
 	temp_row[sizeof(temp_row) - 1] = '\0';
 
-	// Replace newline return with null terminator
 	temp_row[strcspn(temp_row, "\n")] = '\0';
 
 	char *token = strtok(temp_row, ",");
@@ -81,7 +80,7 @@ void split_first_row(const char *first_row)
 		char *trimmed_token = trim_whitespace(token); // Trim token
 		size_t len = strlen(trimmed_token);
 
-		// skiped " ex ("column name")
+		
 		if (len > 0 && trimmed_token[0] == '"' && trimmed_token[len - 1] == '"')
 		{
 			strncpy(all_column_names[num_columns], trimmed_token + 1, len - 2);
@@ -205,6 +204,7 @@ int read_selected_data()
 // -------------------------------------------  part 2  ------------------------------------------- //
 
 #define numOutput 1
+#define Max_node 10 // thong nee chai tum ah rai kub
 #define Train_Ratio 0.8
 #define MAX_ROWS 1500
 
@@ -665,7 +665,7 @@ int main(void)
 	srand((unsigned int)time(NULL)); // genarated random seed
 	int hiddenLayers_num;
 
-    // NOTE: all_data (DataRow[]) is used directly for train_test_split. all_data_2 removed.
+
 
 	printf("\nHidden Layer: "); // ask amount of hidden layer
 	scanf("%d", &hiddenLayers_num);
@@ -835,6 +835,14 @@ int main(void)
 	scanf("%d", &choice);
 	set_output_function(choice);
 
+	float learning_rate;
+
+	printf("\nLearning_rate: ");
+	scanf("%f", &learning_rate);
+	while(getchar() != '\n');
+
+	
+
 	// test print
 	float x = 0.5;
 	for (int i = 0; i < hiddenLayers_num; i++)
@@ -848,7 +856,6 @@ int main(void)
 	int layers = hiddenLayers_num ; 
 	float sum ; 
 
-	// Corrected: z_keep size is calculated dynamically
 	float *z_keep = (float *)malloc(z_keep_size * sizeof(float)); // Activation before activation function (z)
     if (z_keep == NULL) { /* handle error and clean up */ return 1; }
 
@@ -857,7 +864,7 @@ int main(void)
     if (output == NULL) { /* handle error */ return 1; }
 
 
-	float learning_rate = 0.01 ;
+	
 
 	for (int adjust_time_count = 0 ; adjust_time_count < Adjust_time ; adjust_time_count ++) {
 
@@ -1055,25 +1062,21 @@ int main(void)
 
                         int w_idx = current_node_num * input_size_for_this_layer + previous_node;
 						
-						// Accumulate dl/dw
 						weight_adjust_record[layer_num][w_idx] += dldz * a_prev;
 					}
 				}
 				
-				// Move to the next layer (closer to input)
 				current_layer_z_start = next_layer_z_start;
 				current_layer_nodes = nodes_in_this_layer;
 				
 			}
 			
-		} // End of row loop (Training Sample)
+		} 
 
         // Store average loss for the epoch
         losses[adjust_time_count] = total_loss_epoch / train_set.size;
         printf("Epoch %d Loss: %f\n", adjust_time_count + 1, losses[adjust_time_count]);
 
-
-        // --- APPLY WEIGHT AND BIAS UPDATES (SGD/Batch Gradient Descent) ---
         
         // Loop through all layers (Hidden + Output)
 		for (int layer_num = 0 ; layer_num < layers+1 ; layer_num++) { 
@@ -1118,7 +1121,7 @@ int main(void)
 		}
 		
 
-	} // End of adjust_times loop (Epoch)
+	} 
 
 
 
@@ -1163,20 +1166,113 @@ int main(void)
 		}
 
 			
-	// *** Note: To actually evaluate performance, you would add a separate loop here
-	// using the 'test_set' data and the trained weights/biases to calculate Test Loss/Metrics.
+
 	printf("\n--- Note: Evaluation on test set is not implemented in this version. ---\n");
 	printf("\n==============================================\n");
 	printf("Model Training Complete.\n");
 	printf("==============================================\n");
 
 	// Print Loss History
+
 	for(int i = 0; i < Adjust_time; i++) printf("Loss epoch %d: %f\n", i+1, losses[i]);
 
+	FILE *graph = fopen("losses.txt", "w");
+	
+	for(int i = 0; i < Adjust_time; i++){
+		fprintf(graph, "%f", losses[i]);
+		if(i < Adjust_time - 1) fprintf(graph, "\n");
+	}
+	
+	fclose(graph);
+	float value;
+	// ==========================================================================================
+	float z_keep2[z_keep_size];
+	output[0] = 0;
 
+
+	float total_loss_epoch = 0 ;
+		for (int row = 0 ; row < test_set.size ; row ++ ) {
+
+			//printf("\n             run trought row : %d\n",row);
+
+
+			int node_index = 0; // using with activationfunction_output
+			int previouslayernode_sum = 0 ;//for tracking previous node during interaction between layers
+
+			for (int layer_num = 0 ; layer_num < layers ; layer_num ++ ) {
+
+				for (int node_num = 0 ; node_num < HiddenNode_num[layer_num] ; node_num++){
+					sum = 0;
+					if (layer_num == 0) {
+						for (int previous_node = 0 ; previous_node < feature_n ; previous_node++ ) {
+			
+							sum += test_set.rows[row].feature_value[previous_node] * weights[layer_num][node_num*feature_n+previous_node];
+
+						}
+						
+					}else{
+
+						for (int previous_node = 0 ; previous_node < HiddenNode_num[layer_num-1]; previous_node ++ ) {
+
+							value = (*functions_pointer[layer_num-1])(z_keep2[previouslayernode_sum + previous_node]) ; //last z
+
+							sum += value * weights[layer_num][node_num*HiddenNode_num[layer_num-1]+previous_node] ;						
+						}
+						
+					}
+					
+					sum += bias[layer_num][node_num] ; 
+					
+					z_keep2[node_index] = sum ;
+					
+					sum = (*functions_pointer[layer_num])(sum) ; 
+
+					node_index++;
+					
+				}
+
+				if (layer_num != 0) {
+					previouslayernode_sum += HiddenNode_num[layer_num-1] ;
+				}
+				
+
+			}
+
+			//printf("\n-----finished forward propagation--------\n");
+
+			for (int outputnode_num = 0 ; outputnode_num < output_num ; outputnode_num ++) { 
+				
+				sum = 0 ;
+				for (int lasthiddennode_num = 0 ; lasthiddennode_num < HiddenNode_num[layers-1]; lasthiddennode_num++){
+
+					value = (*functions_pointer[layers-1])(z_keep2[node_index-HiddenNode_num[layers-1]+lasthiddennode_num]); //value of last hidden
+
+					sum += value * weights[layers][outputnode_num*HiddenNode_num[layers-1]+lasthiddennode_num]; 
+
+				}
+
+				sum += bias[layers][outputnode_num] ; 
+				z_keep2[node_index+outputnode_num] = sum ;
+				sum = (*outputfunction_pointer)(sum);
+				*(output+outputnode_num) = sum ;
+
+				//printf("output node%d's answer : %f\n",outputnode_num,sum);
+			}
+
+		//printf("-------finish answering----------\n");
+
+		float label_arr[1];
+		label_arr[0] = test_set.rows[row].label_value;
+
+		total_loss_epoch += lfunction_pointer(label_arr, output, 1);
+
+		}
+
+		printf("evaluate model loss : %f\n",total_loss_epoch/test_set.size);
+
+	
 	// --- FREE ALLOCATED MEMORY ---
     
-    // Free 2D arrays (inner arrays first, then outer array of pointers)
     for(int i = 0; i < hiddenLayers_num + 1; i++) {
 		if (bias[i] != NULL) free(bias[i]);
 		if (bias_adjust_record[i] != NULL) free(bias_adjust_record[i]);
@@ -1189,7 +1285,6 @@ int main(void)
     free(weights);
     free(weight_adjust_record);
 
-    // Free 1D arrays and structures
 	free(all_data); // Free Part 1 data
 	free(HiddenNode_num);
 	free(output); // Allocated in Trainer section
